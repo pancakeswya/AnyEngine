@@ -1,0 +1,10 @@
+include_guard()
+
+function(configure_shaders DIR NAME_IN NAME_OUT)
+    file(GLOB SHADERS ${DIR}/*)
+    foreach(SHADER ${SHADERS})
+        get_filename_component(SHADERNAME ${SHADER} NAME)
+        file(READ ${SHADER} ${SHADERNAME})
+    endforeach ()
+    configure_file(${NAME_IN} ${NAME_OUT} @ONLY)
+endfunction()

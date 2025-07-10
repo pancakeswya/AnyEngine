@@ -1,0 +1,8 @@
+.DS_Store
+build/
+cmake-build-*
+android/libs
+android/app/src/main/assets
+.idea
+.cxx
+.gradle
