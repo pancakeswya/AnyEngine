@@ -43,7 +43,7 @@ else()
     add_executable(${EXECUTABLE_NAME})
 endif()
 
-target_sources(${EXECUTABLE_NAME} PRIVATE main.cpp)
+target_sources(${EXECUTABLE_NAME} PRIVATE app.h app.cc main.cc)
 target_compile_features(${EXECUTABLE_NAME} PUBLIC cxx_std_20)
 
 target_link_libraries(${EXECUTABLE_NAME} PUBLIC SDL3::SDL3 SDL3_mixer::SDL3_mixer)
