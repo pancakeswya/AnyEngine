@@ -115,11 +115,20 @@ if (${CMAKE_BUILD_TYPE} STREQUAL "Debug")
     else()
         set(VK_VALIDATION_LAYERS "libVkLayer_khronos_validation${CMAKE_SHARED_LIBRARY_SUFFIX}")
         if (NOT EXISTS "${CMAKE_BINARY_DIR}/lib/${VK_VALIDATION_LAYERS}")
+            set(VVL_CMAKE_ARGS "")
+            if (UNIX AND NOT APPLE)
+                if (NOT HAVE_X11)
+                    list(APPEND VVL_CMAKE_ARGS -DBUILD_WSI_XCB_SUPPORT=OFF -DBUILD_WSI_XLIB_SUPPORT=OFF)
+                endif()
+                if (NOT HAVE_WAYLAND)
+                    list(APPEND VVL_CMAKE_ARGS -DBUILD_WSI_WAYLAND_SUPPORT=OFF)
+                endif()
+            endif()
             include(ExternalProject)
             ExternalProject_add(Vulkan-ValidationLayers
                     GIT_REPOSITORY https://github.com/KhronosGroup/Vulkan-ValidationLayers.git
                     GIT_TAG ${VK_SDK_TAG}
-                    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR} -DBUILD_WSI_XCB_SUPPORT=OFF -DBUILD_WSI_XLIB_SUPPORT=OFF -DBUILD_WSI_WAYLAND_SUPPORT=OFF -DUPDATE_DEPS=ON -DBUILD_WERROR=OFF -DBUILD_TESTS=OFF -DCMAKE_BUILD_TYPE=Release
+                    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR} ${VVL_CMAKE_ARGS} -DUPDATE_DEPS=ON -DBUILD_WERROR=OFF -DBUILD_TESTS=OFF -DCMAKE_BUILD_TYPE=Release
                     BUILD_COMMAND ${CMAKE_COMMAND} --build . --config Release --parallel ${CMAKE_BUILD_PARALLEL_LEVEL}
                     INSTALL_DIR ${CMAKE_BINARY_DIR}
             )
