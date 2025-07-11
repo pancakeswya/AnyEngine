@@ -21,8 +21,6 @@ namespace vk {
 
 class Api final : public render::Api {
 public:
-  static constexpr SDL_WindowFlags kWindowFlags = SDL_WINDOW_VULKAN;
-
   explicit Api(SDL_Window* window, size_t frame_count = 2, const char* path = nullptr);
   ~Api() override;
 
