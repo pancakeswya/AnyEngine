@@ -185,7 +185,7 @@ bool PhysicalDevice::CheckExtensionsSupport(const std::vector<const char*>& exte
   if (const VkResult result = vkEnumerateDeviceExtensionProperties(handle_, nullptr, &extension_count, available_extensions.data()); result != VK_SUCCESS) {
     throw Error("failed to get device extension properties").WithCode(result);
   }
-  std::set required_extensions(extensions.begin(), extensions.end());
+  std::set<std::string> required_extensions(extensions.begin(), extensions.end());
 
   for (const VkExtensionProperties& extension : available_extensions) {
     required_extensions.erase(extension.extensionName);

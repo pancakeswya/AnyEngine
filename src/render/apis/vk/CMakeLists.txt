@@ -98,47 +98,18 @@ if (NOT TARGET shaderc_shared)
             GIT_REPOSITORY https://github.com/google/shaderc.git
             GIT_TAG v2024.0
     )
-
     FetchContent_MakeAvailable(SPIRV-Cross SPIRV-Headers SPIRV-Tools glslang shaderc)
 endif()
 
-if (${CMAKE_BUILD_TYPE} STREQUAL "Debug")
-    if (ANDROID)
-        set(VVL_VERSION "${VK_VERSION}.0")
-        if(NOT EXISTS ${CMAKE_BINARY_DIR}/Vulkan-ValidationLayers-${VVL_VERSION}.zip)
-            file(DOWNLOAD https://github.com/KhronosGroup/Vulkan-ValidationLayers/releases/download/sdk-${VVL_VERSION}/android-binaries-${VVL_VERSION}.zip ${CMAKE_BINARY_DIR}/Vulkan-ValidationLayers-${VVL_VERSION}.zip)
-        endif()
-        if (NOT ${MOBILE_LIBS_DIR})
-            file(MAKE_DIRECTORY ${MOBILE_LIBS_DIR})
-        endif()
-        file(ARCHIVE_EXTRACT INPUT ${CMAKE_BINARY_DIR}/Vulkan-ValidationLayers-${VVL_VERSION}.zip DESTINATION ${MOBILE_LIBS_DIR})
-    else()
-        set(VK_VALIDATION_LAYERS "libVkLayer_khronos_validation${CMAKE_SHARED_LIBRARY_SUFFIX}")
-        if (NOT EXISTS "${CMAKE_BINARY_DIR}/lib/${VK_VALIDATION_LAYERS}")
-            set(VVL_CMAKE_ARGS "")
-            if (UNIX AND NOT APPLE)
-                if (NOT HAVE_X11)
-                    list(APPEND VVL_CMAKE_ARGS -DBUILD_WSI_XCB_SUPPORT=OFF -DBUILD_WSI_XLIB_SUPPORT=OFF)
-                endif()
-                if (NOT HAVE_WAYLAND)
-                    list(APPEND VVL_CMAKE_ARGS -DBUILD_WSI_WAYLAND_SUPPORT=OFF)
-                endif()
-            endif()
-            include(ExternalProject)
-            ExternalProject_add(Vulkan-ValidationLayers
-                    GIT_REPOSITORY https://github.com/KhronosGroup/Vulkan-ValidationLayers.git
-                    GIT_TAG ${VK_SDK_TAG}
-                    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR} ${VVL_CMAKE_ARGS} -DUPDATE_DEPS=ON -DBUILD_WERROR=OFF -DBUILD_TESTS=OFF -DCMAKE_BUILD_TYPE=Release
-                    BUILD_COMMAND ${CMAKE_COMMAND} --build . --config Release --parallel ${CMAKE_BUILD_PARALLEL_LEVEL}
-                    INSTALL_DIR ${CMAKE_BINARY_DIR}
-            )
-            add_custom_command(POST_BUILD
-                    TARGET Vulkan-ValidationLayers
-                    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_BINARY_DIR}/lib/${VK_VALIDATION_LAYERS}" "${CMAKE_BINARY_DIR}/$<CONFIGURATION>/${VK_VALIDATION_LAYERS}"
-            )
-            add_dependencies(vk_api Vulkan-ValidationLayers)
-        endif()
+if (${CMAKE_BUILD_TYPE} STREQUAL "Debug" AND ANDROID)
+    set(VVL_VERSION "${VK_VERSION}.0")
+    if(NOT EXISTS ${CMAKE_BINARY_DIR}/Vulkan-ValidationLayers-${VVL_VERSION}.zip)
+        file(DOWNLOAD https://github.com/KhronosGroup/Vulkan-ValidationLayers/releases/download/sdk-${VVL_VERSION}/android-binaries-${VVL_VERSION}.zip ${CMAKE_BINARY_DIR}/Vulkan-ValidationLayers-${VVL_VERSION}.zip)
     endif()
+    if (NOT ${MOBILE_LIBS_DIR})
+        file(MAKE_DIRECTORY ${MOBILE_LIBS_DIR})
+    endif()
+    file(ARCHIVE_EXTRACT INPUT ${CMAKE_BINARY_DIR}/Vulkan-ValidationLayers-${VVL_VERSION}.zip DESTINATION ${MOBILE_LIBS_DIR})
 endif()
 
 target_link_libraries(vk_api PUBLIC
