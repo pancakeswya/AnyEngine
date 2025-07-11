@@ -33,7 +33,7 @@ public:
 
   explicit Plugin(const std::string& path) {
     if (shared_object_ = SDL_LoadObject((path + DLL_EXT).c_str()); shared_object_ == nullptr) {
-      throw Error("Failed to load library: " + path);
+      throw Error("Failed to load library: " + path + DLL_EXT", error: " + SDL_GetError());
     }
   }
 
