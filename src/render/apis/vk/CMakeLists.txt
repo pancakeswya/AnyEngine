@@ -119,7 +119,7 @@ if (${CMAKE_BUILD_TYPE} STREQUAL "Debug")
             ExternalProject_add(Vulkan-ValidationLayers
                     GIT_REPOSITORY https://github.com/KhronosGroup/Vulkan-ValidationLayers.git
                     GIT_TAG ${VK_SDK_TAG}
-                    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR} -DUPDATE_DEPS=ON -DBUILD_WERROR=OFF -DBUILD_TESTS=OFF -DCMAKE_BUILD_TYPE=Release
+                    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR} -DBUILD_WSI_XCB_SUPPORT=OFF -DBUILD_WSI_XLIB_SUPPORT=OFF -DBUILD_WSI_WAYLAND_SUPPORT=OFF -DUPDATE_DEPS=ON -DBUILD_WERROR=OFF -DBUILD_TESTS=OFF -DCMAKE_BUILD_TYPE=Release
                     BUILD_COMMAND ${CMAKE_COMMAND} --build . --config Release --parallel ${CMAKE_BUILD_PARALLEL_LEVEL}
                     INSTALL_DIR ${CMAKE_BINARY_DIR}
             )
