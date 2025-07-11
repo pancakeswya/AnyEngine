@@ -5,7 +5,8 @@
 
 #include <vulkan/vulkan.h>
 
-#include <algorithm>
+#include <utility>
+#include <memory>
 #include <functional>
 
 namespace vk {

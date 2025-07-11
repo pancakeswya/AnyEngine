@@ -5,6 +5,9 @@
 #include "render/geometry_transferer.h"
 #include "render/texture_transferer.h"
 
+#include <memory>
+#include <vector>
+
 namespace render {
 
 struct Api {

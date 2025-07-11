@@ -4,12 +4,14 @@
 
 #include <shaderc/shaderc.hpp>
 
+#include <cstring>
+
 namespace vk {
 
 namespace {
 
 inline std::vector<uint32_t> CompileToSpv(const shaderc::Compiler& compiler, shaderc_shader_kind kind, const char* source) {
-  const shaderc::SpvCompilationResult spirv = compiler.CompileGlslToSpv(source, strlen(source), kind, "source");
+  const shaderc::SpvCompilationResult spirv = compiler.CompileGlslToSpv(source, std::strlen(source), kind, "source");
   if (spirv.GetCompilationStatus() != shaderc_compilation_status_success) {
     throw Error("failed to compile shaders: " + spirv.GetErrorMessage());
   }

@@ -3,7 +3,6 @@
 #include "render/apis/vk/error.h"
 #include "render/apis/vk/shaders.h"
 
-#include <algorithm>
 #include <array>
 #include <utility>
 #include <vector>

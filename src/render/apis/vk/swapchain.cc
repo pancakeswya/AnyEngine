@@ -3,6 +3,8 @@
 #include "render/apis/vk/error.h"
 
 #include <algorithm>
+#include <utility>
+#include <limits>
 
 namespace vk {
 

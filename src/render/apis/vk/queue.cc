@@ -1,7 +1,5 @@
 #include "render/apis/vk/queue.h"
 
-#include <algorithm>
-
 namespace vk {
 
 namespace {

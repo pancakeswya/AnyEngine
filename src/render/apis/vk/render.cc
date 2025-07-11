@@ -3,7 +3,6 @@
 #include "render/apis/vk/error.h"
 
 #include <array>
-#include <algorithm>
 
 namespace vk {
 

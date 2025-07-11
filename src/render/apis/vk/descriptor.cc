@@ -2,7 +2,6 @@
 
 #include "render/apis/vk/error.h"
 
-#include <algorithm>
 #include <array>
 
 namespace vk {

@@ -4,7 +4,7 @@
 #include "render/geometry.h"
 #include "render/texture.h"
 
-#include <algorithm>
+#include <utility>
 #include <vector>
 
 namespace render {
