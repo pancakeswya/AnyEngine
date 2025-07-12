@@ -23,6 +23,8 @@ public:
   App();
   ~App() = default;
 
+  void Init();
+
   [[nodiscard]] SDL_AppResult HandleEvent(const SDL_Event* event) const;
   [[nodiscard]] SDL_AppResult Iterate() const;
 private:
@@ -34,7 +36,7 @@ private:
   render::ObjectParserPlugin object_parser_plugin_;
   render::ObjectParserHandle object_parser_handle_;
 
-  render::Object& object_;
+  render::Object* object_;
 };
 
 #endif // APP_H_

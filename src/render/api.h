@@ -14,7 +14,7 @@ struct Api {
   virtual ~Api() = default;
 
   virtual void RenderFrame() = 0;
-  virtual Object& LoadObject(
+  virtual Object* LoadObject(
       GeometryTransferer& geometry_transferer,
       std::vector<std::unique_ptr<TextureTransferer>>& texture_transferers
   ) = 0;

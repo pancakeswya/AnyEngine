@@ -28,7 +28,7 @@ public:
   void OnResize(int width, int height) override;
 
   void RenderFrame() override;
-  render::Object& LoadObject(
+  render::Object* LoadObject(
       render::GeometryTransferer& geometry_transferer,
       std::vector<std::unique_ptr<render::TextureTransferer>>&
           texture_transferers) override;

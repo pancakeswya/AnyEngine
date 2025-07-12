@@ -8,6 +8,7 @@
 #include <utility>
 #include <memory>
 #include <string>
+#include <functional>
 
 #ifdef _WIN32
 #   define DLL_EXT ".dll"
@@ -25,7 +26,7 @@
 namespace base {
 
 template <typename HandleType>
-using PluginHandle = std::unique_ptr<HandleType, void(*)(HandleType*)>;
+using PluginHandle = std::unique_ptr<HandleType,std::function<void(HandleType*)>>;
 
 class Plugin {
 public:

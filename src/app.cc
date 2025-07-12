@@ -24,7 +24,7 @@ SDL_Window* CreateWindow(const SDL_WindowFlags window_flags) {
   return window;
 }
 
-render::Object& LoadObject(const std::string& filename,
+render::Object* LoadObject(const std::string& filename,
                            const render::ApiHandle& api_handle,
                            const render::ObjectParserHandle& object_parser_handle) {
   std::vector<std::string> texture_paths;
@@ -40,12 +40,16 @@ render::Object& LoadObject(const std::string& filename,
 } // namespace
 
 App::App()
-  : api_plugin_("libvk_api"),
-    window_(CreateWindow(api_plugin_.GetWindowFlags())),
-    api_handle_(api_plugin_.CreateHandle(window_)),
-    object_parser_plugin_("libobj_parser"),
-    object_parser_handle_(object_parser_plugin_.CreateHandle()),
-    object_(LoadObject("obj/tommy/tommy.obj", api_handle_, object_parser_handle_)) {}
+    : api_plugin_("libvk_api"),
+      window_(CreateWindow(api_plugin_.GetWindowFlags())),
+      object_parser_plugin_("libobj_parser") {}
+
+void App::Init() {
+  api_handle_ = api_plugin_.CreateHandle(window_);
+  object_parser_handle_ = object_parser_plugin_.CreateHandle();
+  object_ = LoadObject("obj/tommy/tommy.obj", api_handle_, object_parser_handle_);
+}
+
 
 SDL_AppResult App::HandleEvent(const SDL_Event* event) const {
   switch (event->type) {
@@ -76,7 +80,7 @@ SDL_AppResult App::Iterate() const {
   uniforms.proj = glm::perspective(glm::radians(45.0f), static_cast<float>(width) / static_cast<float>(height), 0.1f, 10.0f);
   uniforms.proj[1][1] *= -1;
 
-  object_.UpdateUniforms(&uniforms);
+  object_->UpdateUniforms(&uniforms);
 
   return SDL_APP_CONTINUE;
 }

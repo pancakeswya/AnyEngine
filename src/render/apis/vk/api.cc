@@ -200,7 +200,7 @@ inline StagingBuffer Api::TransferBufferToStaging(
   return staging_buffer;
 }
 
-render::Object& Api::LoadObject(
+render::Object* Api::LoadObject(
     render::GeometryTransferer& geometry_transferer,
     std::vector<std::unique_ptr<render::TextureTransferer>>& texture_transferers
 ) {
@@ -261,7 +261,7 @@ render::Object& Api::LoadObject(
     std::move(images),
     frame_count_
   );
-  return objects_.back();
+  return objects_.data() + objects_.size() - 1;
 }
 
 void Api::RecreateSwapchain() {
