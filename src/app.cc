@@ -50,7 +50,6 @@ void App::Init() {
   object_ = LoadObject("obj/tommy/tommy.obj", api_handle_, object_parser_handle_);
 }
 
-
 SDL_AppResult App::HandleEvent(const SDL_Event* event) const {
   switch (event->type) {
     case SDL_EVENT_QUIT:

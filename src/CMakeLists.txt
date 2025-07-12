@@ -49,7 +49,7 @@ target_compile_features(${EXECUTABLE_NAME} PUBLIC cxx_std_20)
 target_link_libraries(${EXECUTABLE_NAME} PUBLIC SDL3::SDL3 SDL3_mixer::SDL3_mixer)
 target_compile_definitions(${EXECUTABLE_NAME} PUBLIC SDL_MAIN_USE_CALLBACKS)
 
-target_link_libraries(${EXECUTABLE_NAME} PUBLIC texture_transferer_sdl io glm)
+target_link_libraries(${EXECUTABLE_NAME} PUBLIC texture_transferer_sdl io render resource glm)
 target_compile_definitions(${EXECUTABLE_NAME} PUBLIC GLM_FORCE_RADIANS GLM_FORCE_DEPTH_ZERO_TO_ONE GLM_ENABLE_EXPERIMENTAL)
 
 file(GLOB_RECURSE RESOURCES "${CMAKE_SOURCE_DIR}/resources/obj/*")

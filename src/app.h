@@ -36,7 +36,7 @@ private:
   render::ObjectParserPlugin object_parser_plugin_;
   render::ObjectParserHandle object_parser_handle_;
 
-  render::Object* object_;
+  render::Object* object_ = nullptr;
 };
 
 #endif // APP_H_
