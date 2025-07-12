@@ -2,14 +2,14 @@
 
 #include "render/apis/vk/api.h"
 
-PLUGIN_CONV SDL_WindowFlags PluginRenderApiGetWindowFlags() {
+SDL_WindowFlags PLUGIN_CONV PluginRenderApiGetWindowFlags() {
   return SDL_WINDOW_VULKAN;
 }
 
-PLUGIN_CONV render::Api* PluginRenderApiCreate(SDL_Window* window) {
+render::Api* PLUGIN_CONV PluginRenderApiCreate(SDL_Window* window) {
   return new vk::Api(window);
 }
 
-PLUGIN_CONV void PluginRenderApiDestroy(render::Api* api) {
+void PLUGIN_CONV PluginRenderApiDestroy(render::Api* api) {
   delete api;
 }

@@ -379,7 +379,7 @@ Data ParseFromFile(const std::string& path) {
   resource::scope_exit file_guard([file] {
     SDL_CloseIO(file);
   });
-  data.dir_path = io::BasePath() / GetDirPath(path);
+  data.dir_path = (io::BasePath() / GetDirPath(path)).string();
 
   std::vector<char> buffer(2 * kBufferSize);
   char* buffer_ptr = buffer.data();

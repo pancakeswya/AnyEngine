@@ -28,7 +28,7 @@ render::Object& LoadObject(const std::string& filename,
                            const render::ApiHandle& api_handle,
                            const render::ObjectParserHandle& object_parser_handle) {
   std::vector<std::string> texture_paths;
-  render::GeometryTransferer& geometry_transferer = object_parser_handle->Parse(io::BasePath() / filename, texture_paths);
+  render::GeometryTransferer& geometry_transferer = object_parser_handle->Parse((io::BasePath() / filename).string(), texture_paths);
   std::vector<std::unique_ptr<render::TextureTransferer>> texture_transferers;
   texture_transferers.reserve(texture_paths.size());
   for (const std::string& texture_path : texture_paths) {
