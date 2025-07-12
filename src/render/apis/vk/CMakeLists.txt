@@ -78,7 +78,7 @@ if (NOT TARGET shaderc_shared)
             GIT_TAG ${VK_SDK_TAG}
     )
 
-    set(SKIP_GLSLANG_INSTALL OFF)
+    set(SKIP_GLSLANG_INSTALL ON)
     set(ENABLE_SPVREMAPPER OFF)
     set(ENABLE_GLSLANG_BINARIES OFF)
     set(ENABLE_GLSLANG_JS OFF)
