@@ -51,13 +51,13 @@ void Commander::Begin() const {
     .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
     .flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT
   };
-  if (const VkResult result = vkBeginCommandBuffer(command_buffers_.get()[0], &begin_info); result != VK_SUCCESS) {
+  if (const VkResult result = vkBeginCommandBuffer(command_buffers_[0], &begin_info); result != VK_SUCCESS) {
     throw Error("failed to begin command buffer").WithCode(result);
   }
 }
 
 void Commander::End() const {
-  if (const VkResult result = vkEndCommandBuffer(command_buffers_.get()[0]); result != VK_SUCCESS) {
+  if (const VkResult result = vkEndCommandBuffer(command_buffers_[0]); result != VK_SUCCESS) {
     throw Error("failed to end cmd buffer").WithCode(result);
   }
   const VkSubmitInfo submit_info = {

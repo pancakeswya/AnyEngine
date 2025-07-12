@@ -1,7 +1,7 @@
 include(${CMAKE_SOURCE_DIR}/cmake/plugins.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/shaders.cmake)
 
-set(VK_VERSION "1.3.261")
+set(VK_VERSION "1.3.250")
 set(VK_SDK_TAG "sdk-${VK_VERSION}")
 
 configure_shaders(shaders shaders.in.cc shaders.cc)
@@ -53,7 +53,7 @@ if (NOT TARGET SDL3::SDL3)
     find_package(SDL3 REQUIRED)
 endif()
 
-if (NOT TARGET shaderc)
+if (NOT TARGET shaderc_shared)
     include(FetchContent)
 
     set(SPIRV_CROSS_CLI OFF)
@@ -98,22 +98,24 @@ if (NOT TARGET shaderc)
             GIT_REPOSITORY https://github.com/google/shaderc.git
             GIT_TAG v2024.0
     )
+
     FetchContent_MakeAvailable(SPIRV-Cross SPIRV-Headers SPIRV-Tools glslang shaderc)
 endif()
 
 if (${CMAKE_BUILD_TYPE} STREQUAL "Debug" AND ANDROID)
     set(VVL_VERSION "${VK_VERSION}.0")
-    if(NOT EXISTS ${CMAKE_BINARY_DIR}/Vulkan-ValidationLayers-${VVL_VERSION}.zip)
-        file(DOWNLOAD https://github.com/KhronosGroup/Vulkan-ValidationLayers/releases/download/sdk-${VVL_VERSION}/android-binaries-${VVL_VERSION}.zip ${CMAKE_BINARY_DIR}/Vulkan-ValidationLayers-${VVL_VERSION}.zip)
+    set(VVL_NAME Vulkan-ValidationLayers-${VVL_VERSION}.zip)
+    if(NOT EXISTS ${CMAKE_BINARY_DIR}/${VVL_NAME})
+        file(DOWNLOAD https://github.com/KhronosGroup/Vulkan-ValidationLayers/releases/download/sdk-${VVL_VERSION}/android-binaries-${VVL_VERSION}.zip ${CMAKE_BINARY_DIR}/${VVL_NAME})
     endif()
     if (NOT ${MOBILE_LIBS_DIR})
         file(MAKE_DIRECTORY ${MOBILE_LIBS_DIR})
     endif()
-    file(ARCHIVE_EXTRACT INPUT ${CMAKE_BINARY_DIR}/Vulkan-ValidationLayers-${VVL_VERSION}.zip DESTINATION ${MOBILE_LIBS_DIR})
+    file(ARCHIVE_EXTRACT INPUT ${CMAKE_BINARY_DIR}/${VVL_NAME} DESTINATION ${MOBILE_LIBS_DIR})
 endif()
 
 target_link_libraries(vk_api PUBLIC
-        shaderc
+        shaderc_shared
         SDL3::SDL3
         Vulkan::Vulkan
         render

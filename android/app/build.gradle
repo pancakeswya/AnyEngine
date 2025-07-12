@@ -42,9 +42,6 @@ android {
             jniLibs.srcDirs += ["${rootDirStr}/libs"]
         }
         externalNativeBuild {
-            // ndkBuild {
-            //     path 'jni/Android.mk'
-            // }
             cmake {
                 path "../../CMakeLists.txt"
                 version "3.22.1"

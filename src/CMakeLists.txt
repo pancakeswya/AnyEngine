@@ -104,18 +104,6 @@ else()
         if (NOT EXISTS ${MOBILE_ASSETS_DIR})
             file(MAKE_DIRECTORY ${MOBILE_ASSETS_DIR})
         endif ()
-        if (NOT EXISTS ${MOBILE_LIBS_DIR})
-            file(MAKE_DIRECTORY ${MOBILE_LIBS_DIR})
-        endif()
-        set(LIBS_DIR "${MOBILE_LIBS_DIR}/${CMAKE_ANDROID_ARCH_ABI}")
-        if(NOT EXISTS ${LIBS_DIR})
-            file(MAKE_DIRECTORY ${LIBS_DIR})
-        endif()
-        add_custom_command(POST_BUILD
-                TARGET "${EXECUTABLE_NAME}"
-                COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/*${CMAKE_SHARED_LIBRARY_SUFFIX}" "${LIBS_DIR}"
-                DEPENDS "${LIB}"
-        )
         set(OUTDIR ${MOBILE_ASSETS_DIR})
     else()
         set(OUTDIR "${CMAKE_BINARY_DIR}/$<CONFIGURATION>")
