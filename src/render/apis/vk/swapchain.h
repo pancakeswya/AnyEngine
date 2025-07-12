@@ -31,10 +31,10 @@ private:
   ImageInfo image_info_;
 };
 
-class SwapchainFramebuffer {
+class SwapchainImagePresent {
 public:
-  DECLARE_DEFAULT_NO_COPY_CLASS(SwapchainFramebuffer);
-  SwapchainFramebuffer(
+  DECLARE_DEFAULT_NO_COPY_CLASS(SwapchainImagePresent);
+  SwapchainImagePresent(
     VkDevice device,
     VkRenderPass render_pass,
     VkImage swapchain_image,

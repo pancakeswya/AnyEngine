@@ -12,14 +12,14 @@ namespace vk {
 
 namespace {
 
-inline std::vector<SwapchainFramebuffer> CreateSwapchainFramebuffers(
+inline std::vector<SwapchainImagePresent> CreateSwapchainImagePresents(
   VkDevice device,
   const Swapchain& swapchain,
   VkRenderPass render_pass,
   const ImageView& depth_image_view
 ) {
   const std::vector<VkImage> images = swapchain.images();
-  std::vector<SwapchainFramebuffer> framebuffers;
+  std::vector<SwapchainImagePresent> framebuffers;
   framebuffers.reserve(images.size());
   for(VkImage image : images) {
     framebuffers.emplace_back(
@@ -107,9 +107,9 @@ Api::Api(SDL_Window* window, const size_t frame_count, const char* path)
     swapchain_(CreateSwapchain(device_, surface_, window)),
     depth_image_(CreateDepthImage(device_, swapchain_)),
     render_pass_(device_, swapchain_.image_info().format, depth_image_.info().format),
-    framebuffers_(CreateSwapchainFramebuffers(device_, swapchain_, render_pass_, depth_image_.view())),
+    image_presents_(CreateSwapchainImagePresents(device_, swapchain_, render_pass_, depth_image_.view())),
     acquire_semaphores_(CreateSyncObjects<Semaphore>(device_, frame_count)),
-    submit_semaphores_(CreateSyncObjects<Semaphore>(device_, framebuffers_.size())),
+    submit_semaphores_(CreateSyncObjects<Semaphore>(device_, image_presents_.size())),
     fences_(CreateSyncObjects<Fence>(device_, frame_count)),
     command_pool_(device_, device_.queues().graphics.family_index()),
     command_buffers_(command_pool_.AllocateCommandBuffers(frame_count)),
@@ -281,10 +281,10 @@ void Api::RecreateSwapchain() {
   swapchain_ = {};
   swapchain_ = CreateSwapchain(device_, surface_, window_);
   depth_image_ = CreateDepthImage(device_, swapchain_);
-  framebuffers_ = CreateSwapchainFramebuffers(device_, swapchain_, render_pass_, depth_image_.view());
+  image_presents_ = CreateSwapchainImagePresents(device_, swapchain_, render_pass_, depth_image_.view());
   
   acquire_semaphores_= CreateSyncObjects<Semaphore>(device_, frame_count_);
-  submit_semaphores_ = CreateSyncObjects<Semaphore>(device_, framebuffers_.size());
+  submit_semaphores_ = CreateSyncObjects<Semaphore>(device_, image_presents_.size());
   fences_ = CreateSyncObjects<Fence>(device_, frame_count_);
 }
 
@@ -303,7 +303,7 @@ void Api::RecordCommandBuffer(VkCommandBuffer cmd_buffer, const size_t image_idx
   const VkRenderPassBeginInfo render_pass_begin_info = {
     .sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
     .renderPass = render_pass_,
-    .framebuffer = framebuffers_[image_idx].framebuffer(),
+    .framebuffer = image_presents_[image_idx].framebuffer(),
     .renderArea = {
         .offset = {0, 0},
         .extent = swapchain_.image_info().extent

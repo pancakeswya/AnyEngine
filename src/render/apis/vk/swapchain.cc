@@ -114,7 +114,7 @@ std::vector<VkImage> Swapchain::images() const {
   return images;
 }
 
-SwapchainFramebuffer::SwapchainFramebuffer(
+SwapchainImagePresent::SwapchainImagePresent(
   VkDevice device,
   VkRenderPass render_pass,
   VkImage swapchain_image,

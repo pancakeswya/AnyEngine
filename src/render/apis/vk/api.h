@@ -49,7 +49,7 @@ private:
   Image depth_image_;
   RenderPass render_pass_;
 
-  std::vector<SwapchainFramebuffer> framebuffers_;
+  std::vector<SwapchainImagePresent> image_presents_;
   std::vector<Semaphore> acquire_semaphores_;
   std::vector<Semaphore> submit_semaphores_;
   std::vector<Fence> fences_;
