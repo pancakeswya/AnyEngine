@@ -50,7 +50,9 @@ private:
   RenderPass render_pass_;
 
   std::vector<SwapchainFramebuffer> framebuffers_;
-  std::vector<SyncObject> sync_objects_;
+  std::vector<Semaphore> acquire_semaphores_;
+  std::vector<Semaphore> submit_semaphores_;
+  std::vector<Fence> fences_;
 
   CommandPool command_pool_;
   CommandBuffers command_buffers_;

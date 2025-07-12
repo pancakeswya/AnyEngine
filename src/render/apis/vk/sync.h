@@ -17,28 +17,6 @@ struct Fence : NonDispatchableHandle<VkFence, VkDevice, vkDestroyFence> {
   explicit Fence(VkDevice device);
 };
 
-class SyncObject {
-public:
-  DECLARE_DEFAULT_NO_COPY_CLASS(SyncObject);
-  explicit SyncObject(VkDevice device);
-
-  [[nodiscard]] VkSemaphore image_semaphore() const noexcept {
-    return image_semaphore_;
-  }
-
-  [[nodiscard]] VkSemaphore render_semaphore() const noexcept {
-    return render_semaphore_;
-  }
-
-  [[nodiscard]] VkFence fence() const noexcept {
-    return fence_;
-  }
-private:
-  Semaphore image_semaphore_;
-  Semaphore render_semaphore_;
-  Fence fence_;
-};
-
 } // namespace vk
 
 #endif // RENDER_APIS_VK_SYNC_OBJECT_H_

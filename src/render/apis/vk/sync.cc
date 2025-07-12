@@ -35,9 +35,4 @@ Semaphore::Semaphore(VkDevice device) : NonDispatchableHandle(CreateSemaphore(de
 
 Fence::Fence(VkDevice device) : NonDispatchableHandle(CreateFence(device), device) {}
 
-SyncObject::SyncObject(VkDevice device)
-  : image_semaphore_(device),
-    render_semaphore_(device),
-    fence_(device) {}
-
 } // namespace vk

@@ -33,10 +33,11 @@ inline std::vector<SwapchainFramebuffer> CreateSwapchainFramebuffers(
   return framebuffers;
 }
 
-inline std::vector<SyncObject> CreateSyncObjects(VkDevice device, const size_t frame_count) {
-  std::vector<SyncObject> sync_objects;
-  sync_objects.reserve(frame_count);
-  for(size_t i = 0; i < frame_count; ++i) {
+template<typename SyncObjectType>
+inline std::vector<SyncObjectType> CreateSyncObjects(VkDevice device, const size_t count) {
+  std::vector<SyncObjectType> sync_objects;
+  sync_objects.reserve(count);
+  for(size_t i = 0; i < count; ++i) {
     sync_objects.emplace_back(device);
   }
   return sync_objects;
@@ -107,7 +108,9 @@ Api::Api(SDL_Window* window, const size_t frame_count, const char* path)
     depth_image_(CreateDepthImage(device_, swapchain_)),
     render_pass_(device_, swapchain_.image_info().format, depth_image_.info().format),
     framebuffers_(CreateSwapchainFramebuffers(device_, swapchain_, render_pass_, depth_image_.view())),
-    sync_objects_(CreateSyncObjects(device_, frame_count)),
+    acquire_semaphores_(CreateSyncObjects<Semaphore>(device_, frame_count)),
+    submit_semaphores_(CreateSyncObjects<Semaphore>(device_, framebuffers_.size())),
+    fences_(CreateSyncObjects<Fence>(device_, frame_count)),
     command_pool_(device_, device_.queues().graphics.family_index()),
     command_buffers_(command_pool_.AllocateCommandBuffers(frame_count)),
     uniform_descriptor_set_layout_(device_),
@@ -130,24 +133,24 @@ void Api::OnResize([[maybe_unused]]const int width, [[maybe_unused]]const int he
 void Api::RenderFrame() {
   uint32_t image_idx;
 
-  VkFence fence = sync_objects_[current_frame_].fence();
-  VkSemaphore wait_semaphore = sync_objects_[current_frame_].image_semaphore();
-  VkSemaphore signal_semaphore = sync_objects_[current_frame_].render_semaphore();
+  VkFence fence = fences_[current_frame_];
+  VkSemaphore acquire_semaphore = acquire_semaphores_[current_frame_];
   VkCommandBuffer cmd_buffer = command_buffers_[current_frame_];
 
   if (const VkResult result = vkWaitForFences(device_, 1, &fence, VK_TRUE, std::numeric_limits<uint64_t>::max()); result != VK_SUCCESS) {
     throw Error("failed to wait for fences").WithCode(result);
   }
-  if (const VkResult result = vkAcquireNextImageKHR(device_, swapchain_, std::numeric_limits<uint64_t>::max(), wait_semaphore, VK_NULL_HANDLE, &image_idx); result != VK_SUCCESS) {
+  if (const VkResult result = vkResetFences(device_, 1, &fence); result != VK_SUCCESS) {
+    throw Error("failed to reset fences").WithCode(result);
+  }
+  if (const VkResult result = vkAcquireNextImageKHR(device_, swapchain_, std::numeric_limits<uint64_t>::max(), acquire_semaphore, VK_NULL_HANDLE, &image_idx); result != VK_SUCCESS) {
     if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
       RecreateSwapchain();
       return;
     }
     throw Error("failed to acquire next image").WithCode(result);
   }
-  if (const VkResult result = vkResetFences(device_, 1, &fence); result != VK_SUCCESS) {
-    throw Error("failed to reset fences").WithCode(result);
-  }
+  VkSemaphore submit_semaphore = submit_semaphores_[image_idx];
   if (const VkResult result = vkResetCommandBuffer(cmd_buffer, 0); result != VK_SUCCESS) {
     throw Error("failed to reset command buffer").WithCode(result);
   }
@@ -158,12 +161,12 @@ void Api::RenderFrame() {
   const VkSubmitInfo submit_info = {
     .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
     .waitSemaphoreCount = 1,
-    .pWaitSemaphores = &wait_semaphore,
+    .pWaitSemaphores = &acquire_semaphore,
     .pWaitDstStageMask = pipeline_stages.data(),
     .commandBufferCount = 1,
     .pCommandBuffers = &cmd_buffer,
     .signalSemaphoreCount = 1,
-    .pSignalSemaphores = &signal_semaphore
+    .pSignalSemaphores = &submit_semaphore
   };
   if (const VkResult result = vkQueueSubmit(device_.queues().graphics, 1, &submit_info, fence); result != VK_SUCCESS) {
     throw Error("failed to submit draw command buffer").WithCode(result);
@@ -172,7 +175,7 @@ void Api::RenderFrame() {
   const VkPresentInfoKHR present_info = {
     .sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
     .waitSemaphoreCount = 1,
-    .pWaitSemaphores = &signal_semaphore,
+    .pWaitSemaphores = &submit_semaphore,
     .swapchainCount = 1,
     .pSwapchains = swapchains.data(),
     .pImageIndices = &image_idx
@@ -279,7 +282,10 @@ void Api::RecreateSwapchain() {
   swapchain_ = CreateSwapchain(device_, surface_, window_);
   depth_image_ = CreateDepthImage(device_, swapchain_);
   framebuffers_ = CreateSwapchainFramebuffers(device_, swapchain_, render_pass_, depth_image_.view());
-  sync_objects_ = CreateSyncObjects(device_, frame_count_);
+  
+  acquire_semaphores_= CreateSyncObjects<Semaphore>(device_, frame_count_);
+  submit_semaphores_ = CreateSyncObjects<Semaphore>(device_, framebuffers_.size());
+  fences_ = CreateSyncObjects<Fence>(device_, frame_count_);
 }
 
 void Api::RecordCommandBuffer(VkCommandBuffer cmd_buffer, const size_t image_idx) const {
