@@ -1,7 +1,7 @@
 include(${CMAKE_SOURCE_DIR}/cmake/plugins.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/shaders.cmake)
 
-set(VK_VERSION "1.3.246")
+set(VK_VERSION "1.3.261")
 set(VK_SDK_TAG "sdk-${VK_VERSION}")
 
 configure_shaders(shaders shaders.in.cc shaders.cc)
@@ -53,7 +53,7 @@ if (NOT TARGET SDL3::SDL3)
     find_package(SDL3 REQUIRED)
 endif()
 
-if (NOT TARGET shaderc_shared)
+if (NOT TARGET shaderc)
     include(FetchContent)
 
     set(SPIRV_CROSS_CLI OFF)
@@ -113,7 +113,7 @@ if (${CMAKE_BUILD_TYPE} STREQUAL "Debug" AND ANDROID)
 endif()
 
 target_link_libraries(vk_api PUBLIC
-        shaderc_shared
+        shaderc
         SDL3::SDL3
         Vulkan::Vulkan
         render
