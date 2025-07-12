@@ -308,7 +308,7 @@ void Api::RecordCommandBuffer(VkCommandBuffer cmd_buffer, const size_t image_idx
   vkCmdBeginRenderPass(cmd_buffer, &render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
   vkCmdBindPipeline(cmd_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline_);
 
-  VkExtent2D extent = swapchain_.image_info().extent;
+  const VkExtent2D extent = swapchain_.image_info().extent;
   const VkViewport viewport = {
     .x = 0.0f,
     .y = static_cast<float>(extent.height),

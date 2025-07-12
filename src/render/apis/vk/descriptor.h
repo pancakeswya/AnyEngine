@@ -8,7 +8,6 @@
 
 #include <vulkan/vulkan.h>
 
-#include <type_traits>
 #include <vector>
 
 namespace vk {

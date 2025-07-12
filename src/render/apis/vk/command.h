@@ -5,8 +5,6 @@
 
 #include <vulkan/vulkan.h>
 
-#include <vector>
-
 namespace vk {
 
 using CommandBuffers = NonDispatchableArrayHandle<VkCommandBuffer>;
