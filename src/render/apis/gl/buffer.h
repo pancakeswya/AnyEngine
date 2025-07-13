@@ -3,9 +3,20 @@
 
 #include "render/apis/gl/loader.h"
 #include "render/apis/gl/handle.h"
+#include "render/apis/gl/check.h"
 #include "render/apis/gl/error.h"
 
 namespace gl {
+
+struct VertexArrayBuffer : ArrayHandle<glGenVertexArrays, glDeleteVertexArrays> {
+  void Bind() const {
+    GL_CHECK(glBindVertexArray(handle_));
+  }
+
+  void Unbind() const {
+    GL_CHECK(glBindVertexArray(0));
+  }
+};
 
 class Buffer : public ArrayHandle<glGenBuffers, glDeleteBuffers> {
 public:
@@ -15,11 +26,15 @@ public:
     : ArrayHandle(size), type_(type) {}
 
   void Bind() const {
-    glBindBuffer(type_, handle_);
+    GL_CHECK(glBindBuffer(type_, handle_));
+  }
+
+  void Unbind() const {
+    GL_CHECK(glBindBuffer(type_, 0));
   }
 
   void Allocate(const size_t size, const GLenum usage) const {
-    glBufferData(type_, static_cast<GLsizeiptr>(size),  nullptr, usage);
+    GL_CHECK(glBufferData(type_, static_cast<GLsizeiptr>(size),  nullptr, usage));
   }
 
   template<typename T>

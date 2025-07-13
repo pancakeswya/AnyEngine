@@ -1,5 +1,6 @@
 #include "render/apis/gl/api.h"
 
+#include "render/apis/gl/check.h"
 #include "render/apis/gl/shaders.h"
 
 namespace gl {
@@ -24,7 +25,7 @@ Api::Api(SDL_Window* window)
     window_(window) {}
 
 void Api::OnResize(const int width, const int height) {
-  glViewport(0, 0, width, height);
+  GL_CHECK(glViewport(0, 0, width, height));
 }
 
 void Api::RenderFrame() {
@@ -35,12 +36,11 @@ void Api::RenderFrame() {
 
   for(const Object& object : objects_) {
     for(const auto[index, offset] : object.texture_indices()) {
-      glBindTexture(GL_TEXTURE_2D, object.textures().at(index));
-      glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(offset - prev_offset), GL_UNSIGNED_INT, reinterpret_cast<void*>(prev_offset * sizeof(GLuint)));
+      object.textures().at(index).Bind();
+      GL_CHECK(glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(offset - prev_offset), GL_UNSIGNED_INT, reinterpret_cast<void*>(prev_offset * sizeof(GLuint))));
       prev_offset = offset;
     }
   }
-  glFinish();
   SDL_GL_SwapWindow(window_);
 }
 
@@ -50,6 +50,18 @@ render::Object* Api::LoadObject(
   const render::GeometryInfo geometry_info = geometry_transferer.info();
   const std::vector<render::TextureIndices>& texture_indices = geometry_transferer.texture_indices();
 
+  Buffer uniform_buffer(GL_UNIFORM_BUFFER);
+  uniform_buffer.Bind();
+  uniform_buffer.Allocate(sizeof(render::Uniforms), GL_STATIC_DRAW);
+
+  const GLuint ubo_index = glGetUniformBlockIndex(program_, "ubo");
+  GL_CHECK(glUniformBlockBinding(program_, ubo_index, 0));
+  GL_CHECK(glBindBufferBase(GL_UNIFORM_BUFFER, 0, uniform_buffer));
+
+#ifdef USE_VAO
+  VertexArrayBuffer array_buffer;
+  array_buffer.Bind();
+#endif
   Buffer indices_buffer(GL_ELEMENT_ARRAY_BUFFER);
   indices_buffer.Bind();
   indices_buffer.Allocate(sizeof(render::Index) * geometry_info.index_count, GL_STATIC_DRAW);
@@ -64,16 +76,16 @@ render::Object* Api::LoadObject(
   geometry_transferer.Transfer(vertices, indices);
 
   const GLuint pos_loc = glGetAttribLocation(program_, "inPosition");
-  glVertexAttribPointer(pos_loc, 3, GL_FLOAT, GL_FALSE,  8 * sizeof(float), nullptr);
-  glEnableVertexAttribArray(pos_loc);
+  GL_CHECK(glVertexAttribPointer(pos_loc, 3, GL_FLOAT, GL_FALSE,  8 * sizeof(float), nullptr));
+  GL_CHECK(glEnableVertexAttribArray(pos_loc));
 
   const GLuint normal_loc = glGetAttribLocation(program_, "inNormal");
-  glVertexAttribPointer(normal_loc, 3, GL_FLOAT, GL_FALSE,  8 * sizeof(float), reinterpret_cast<void*>(3 * sizeof(GLfloat)));
-  glEnableVertexAttribArray(normal_loc);
+  GL_CHECK(glVertexAttribPointer(normal_loc, 3, GL_FLOAT, GL_FALSE,  8 * sizeof(float), reinterpret_cast<void*>(3 * sizeof(GLfloat))));
+  GL_CHECK(glEnableVertexAttribArray(normal_loc));
 
   const GLuint tex_loc = glGetAttribLocation(program_, "inTexCoord");
-  glVertexAttribPointer(tex_loc, 2, GL_FLOAT, GL_FALSE,  8 * sizeof(float), reinterpret_cast<void*>(6 * sizeof(GLfloat)));
-  glEnableVertexAttribArray(tex_loc);
+  GL_CHECK(glVertexAttribPointer(tex_loc, 2, GL_FLOAT, GL_FALSE,  8 * sizeof(float), reinterpret_cast<void*>(6 * sizeof(GLfloat))));
+  GL_CHECK(glEnableVertexAttribArray(tex_loc));
 
   indices_buffer.Unmap();
   vertices_buffer.Unmap();
@@ -93,9 +105,12 @@ render::Object* Api::LoadObject(
   objects_.emplace_back(
     geometry_info,
     texture_indices,
-    program_,
+#ifdef USE_VAO
+    std::move(array_buffer),
+#endif
     std::move(vertices_buffer),
     std::move(indices_buffer),
+    std::move(uniform_buffer),
     std::move(textures)
   );
   return objects_.data() + objects_.size() - 1;

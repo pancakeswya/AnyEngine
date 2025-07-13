@@ -1,30 +1,32 @@
 #include "render/apis/gl/object.h"
 
-#include <glm/gtc/type_ptr.hpp>
+#include <utility>
+#include <cstring>
 
 namespace gl {
 
 Object::Object(
   const render::GeometryInfo& geometry_info,
   const std::vector<render::TextureIndices>& texture_indices,
-  const GLuint program,
+#ifdef USE_VAO
+  VertexArrayBuffer&& vao,
+#endif
   Buffer&& vertices,
   Buffer&& indices,
+  Buffer&& uniforms,
   std::vector<Texture>&& textures
 ) : render::Object(geometry_info, texture_indices),
-    model_location_(glGetUniformLocation(program, "ubo.model")),
-    view_location_(glGetUniformLocation(program, "ubo.view")),
-    projection_location_(glGetUniformLocation(program, "ubo.proj")),
+#ifdef USE_VAO
+    vao_(std::move(vao)),
+#endif
     vertices_(std::move(vertices)),
     indices_(std::move(indices)),
+    uniforms_(std::move(uniforms)),
+    uniforms_mapped_(uniforms_.Map<render::Uniforms>(GL_WRITE_ONLY)),
     textures_(std::move(textures)) {}
 
 void Object::UpdateUniforms(const render::Uniforms* uniforms) {
-  const auto&[model, view, proj] = *uniforms;
-
-  glUniformMatrix4fv(model_location_, 1, GL_FALSE, glm::value_ptr(model[0]));
-  glUniformMatrix4fv(view_location_, 1, GL_FALSE, glm::value_ptr(view[0]));
-  glUniformMatrix4fv(projection_location_, 1, GL_FALSE, glm::value_ptr(proj[0]));
+  std::memcpy(uniforms_mapped_, uniforms, sizeof(render::Uniforms));
 }
 
 } // namespace gl

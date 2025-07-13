@@ -16,9 +16,12 @@ public:
   Object(
     const render::GeometryInfo& geometry_info,
     const std::vector<render::TextureIndices>& texture_indices,
-    GLuint program,
+#ifdef USE_VAO
+    VertexArrayBuffer&& vao,
+#endif
     Buffer&& vertices,
     Buffer&& indices,
+    Buffer&& uniforms,
     std::vector<Texture>&& textures
   );
 
@@ -28,12 +31,13 @@ public:
     return textures_;
   }
 private:
-  GLint model_location_ = GL_INVALID_INDEX;
-  GLint view_location_ = GL_INVALID_INDEX;
-  GLint projection_location_ = GL_INVALID_INDEX;
-
+#ifdef USE_VAO
+  VertexArrayBuffer vao_;
+#endif
   Buffer vertices_;
   Buffer indices_;
+  Buffer uniforms_;
+  render::Uniforms* uniforms_mapped_;
 
   std::vector<Texture> textures_;
 };

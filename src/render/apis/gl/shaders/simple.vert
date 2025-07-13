@@ -1,21 +1,20 @@
+#version 150 core
 
-struct UniformBufferObject {
+in vec3 inPosition;
+in vec3 inNormal;
+in vec2 inTexCoord;
+
+out vec2 fragTexCoord;
+out vec3 fragNormal;
+
+layout(std140) uniform ubo {
     mat4 model;
     mat4 view;
     mat4 proj;
 };
 
-attribute vec3 inPosition;
-attribute vec3 inNormal;
-attribute vec2 inTexCoord;
-
-varying vec2 fragTexCoord;
-varying vec3 fragNormal;
-
-uniform UniformBufferObject ubo;
-
 void main() {
-    gl_Position = ubo.proj * ubo.view * ubo.model * vec4(inPosition, 1.0);
+    gl_Position = proj * view * model * vec4(inPosition, 1.0);
     fragTexCoord = inTexCoord;
     fragNormal = inNormal;
 }

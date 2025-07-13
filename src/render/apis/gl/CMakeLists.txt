@@ -9,6 +9,7 @@ make_plugin(gl_api
         api_plugin.cc
         context.h
         context.cc
+        check.h
         handle.h
         loader.h
         error.h
@@ -32,4 +33,5 @@ if (NOT TARGET SDL3::SDL3)
     find_package(SDL3 REQUIRED)
 endif()
 
+target_compile_definitions(gl_api PUBLIC USE_VAO)
 target_link_libraries(gl_api PUBLIC SDL3::SDL3 OpenGL::GL render)

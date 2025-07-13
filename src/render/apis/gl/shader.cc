@@ -30,10 +30,10 @@ Shader::Shader(const ShaderInfo& info) : Handle(glCreateShader(info.type)) {
 
 ShaderProgram::ShaderProgram(const std::vector<ShaderInfo>& infos) : Handle(glCreateProgram()) {
   glEnable(GL_DEPTH_TEST);
-  glEnable(GL_TEXTURE_2D);
   glActiveTexture(GL_TEXTURE0);
 
   std::vector<Shader> shaders;
+  shaders.reserve(infos.size());
   for(const ShaderInfo& info : infos) {
     shaders.emplace_back(info);
   }
