@@ -23,9 +23,6 @@ SDL_GLContext CreateContext(SDL_Window* window) {
 # endif
 #endif
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-  SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-  SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
-  SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
 
   SDL_GLContext context = SDL_GL_CreateContext(window);
   if (context == nullptr) {
