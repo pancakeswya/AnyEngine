@@ -30,13 +30,13 @@ void TextureTransferer::Transfer(uint8_t* pixels, SDL_PixelFormat format) {
   if (surface_->format != format) {
     SDL_Surface* surface = SDL_ConvertSurface(surface_, format);
     if (surface == nullptr) {
-      throw Error("Failed to convert surface: " + std::string(SDL_GetError()));
+      throw Error(std::string("Failed to convert surface: ") + SDL_GetError());
     }
     SDL_DestroySurface(surface_);
     surface_ = surface;
   }
   if (!SDL_FlipSurface(surface_, SDL_FLIP_VERTICAL)) {
-    throw Error("Failed to flip surface: " + std::string(SDL_GetError()));
+    throw Error(std::string("Failed to flip surface: ") + SDL_GetError());
   }
   std::memcpy(pixels, surface_->pixels, surface_->pitch * surface_->h);
 }

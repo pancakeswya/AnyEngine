@@ -119,4 +119,4 @@ else()
     endforeach()
 endif()
 
-add_dependencies(${EXECUTABLE_NAME} vk_api obj_parser)
+add_dependencies(${EXECUTABLE_NAME} vk_api gl_api obj_parser)

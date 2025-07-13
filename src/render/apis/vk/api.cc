@@ -208,7 +208,7 @@ render::Object* Api::LoadObject(
     std::vector<std::unique_ptr<render::TextureTransferer>>& texture_transferers
 ) {
   const render::GeometryInfo geometry_info = geometry_transferer.info();
-  const std::vector<render::TextureIndices> texture_indices = geometry_transferer.texture_indices();
+  const std::vector<render::TextureIndices>& texture_indices = geometry_transferer.texture_indices();
 
   const TransferBuffer transfer_vertices(device_, sizeof(Vertex) * geometry_info.vertex_count);
   const TransferBuffer transfer_indices(device_, sizeof(Index) * geometry_info.index_count);

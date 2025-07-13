@@ -40,7 +40,7 @@ render::Object* LoadObject(const std::string& filename,
 } // namespace
 
 App::App()
-    : api_plugin_("libvk_api"),
+    : api_plugin_("libgl_api"),
       window_(CreateWindow(api_plugin_.GetWindowFlags())),
       object_parser_plugin_("libobj_parser") {}
 

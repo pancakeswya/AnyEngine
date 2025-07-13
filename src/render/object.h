@@ -49,6 +49,7 @@ private:
   GeometryInfo info_ = {};
   std::vector<TextureIndices> texture_indices_;
 };
+
 } // namespace render
 
 #endif // RENDER_OBJECT_H_
