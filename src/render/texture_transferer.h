@@ -5,10 +5,10 @@
 
 namespace render {
 
-struct TextureTransferer {
-  virtual ~TextureTransferer() = default;
+struct TextureMapper {
+  virtual ~TextureMapper() = default;
   [[nodiscard]] virtual TextureInfo info() const noexcept = 0;
-  virtual void Transfer(uint8_t* pixels, SDL_PixelFormat format) = 0;
+  virtual uint8_t* Map(SDL_PixelFormat format) = 0;
 };
 
 } // namespace render

@@ -22,8 +22,8 @@ endif()
 add_library(texture_transferer_sdl STATIC)
 target_sources(texture_transferer_sdl PUBLIC
         error.h
-        texture_transferer.h
-        texture_transferer.cc
+        texture_mapper.h
+        texture_mapper.cc
 )
 
 if (APPLE AND NOT BUILD_SHARED_LIBS)

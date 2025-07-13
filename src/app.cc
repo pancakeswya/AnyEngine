@@ -1,10 +1,10 @@
 #include "app.h"
 
-#include "render/transferers/sdl/texture_transferer.h"
-#include "io/file.h"
-
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/hash.hpp>
+
+#include "io/file.h"
+#include "render/mappers/sdl/texture_mapper.h"
 
 namespace {
 
@@ -29,12 +29,12 @@ render::Object* LoadObject(const std::string& filename,
                            const render::ObjectParserHandle& object_parser_handle) {
   std::vector<std::string> texture_paths;
   render::GeometryTransferer& geometry_transferer = object_parser_handle->Parse((io::BasePath() / filename).string(), texture_paths);
-  std::vector<std::unique_ptr<render::TextureTransferer>> texture_transferers;
-  texture_transferers.reserve(texture_paths.size());
+  std::vector<std::unique_ptr<render::TextureMapper>> texture_mappers;
+  texture_mappers.reserve(texture_paths.size());
   for (const std::string& texture_path : texture_paths) {
-    texture_transferers.emplace_back(std::make_unique<sdl::TextureTransferer>(texture_path));
+    texture_mappers.emplace_back(std::make_unique<sdl::TextureMapper>(texture_path));
   }
-  return api_handle->LoadObject(geometry_transferer, texture_transferers);
+  return api_handle->LoadObject(geometry_transferer, texture_mappers);
 }
 
 } // namespace
@@ -71,15 +71,13 @@ SDL_AppResult App::Iterate() const {
   const auto current_time = std::chrono::high_resolution_clock::now();
   const float time = std::chrono::duration<float>(current_time - start_time).count();
 
-  render::Uniforms uniforms = {};
-  uniforms.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-  uniforms.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+  render::Uniforms* uniforms = object_->uniforms();
+  uniforms->model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+  uniforms->view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
   int width, height;
   SDL_GetWindowSize(window_, &width, &height);
-  uniforms.proj = glm::perspective(glm::radians(45.0f), static_cast<float>(width) / static_cast<float>(height), 0.1f, 10.0f);
-  uniforms.proj[1][1] *= -1;
-
-  object_->UpdateUniforms(&uniforms);
+  uniforms->proj = glm::perspective(glm::radians(45.0f), static_cast<float>(width) / static_cast<float>(height), 0.1f, 10.0f);
+  uniforms->proj[1][1] *= -1;
 
   return SDL_APP_CONTINUE;
 }

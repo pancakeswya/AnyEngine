@@ -1,5 +1,5 @@
-#ifndef RENDER_TRANSFERERS_SDL_ERROR_H_
-#define RENDER_TRANSFERERS_SDL_ERROR_H_
+#ifndef RENDER_MAPPERS__SDL_ERROR_H_
+#define RENDER_MAPPERS__SDL_ERROR_H_
 
 #include "render/error.h"
 
@@ -11,4 +11,4 @@ struct Error final : render::Error {
 
 } // namespace sdl
 
-#endif // RENDER_TRANSFERERS_SDL_ERROR_H_
+#endif // RENDER_MAPPERS__SDL_ERROR_H_

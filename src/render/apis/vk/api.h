@@ -30,8 +30,7 @@ public:
   void RenderFrame() override;
   render::Object* LoadObject(
       render::GeometryTransferer& geometry_transferer,
-      std::vector<std::unique_ptr<render::TextureTransferer>>&
-          texture_transferers) override;
+      std::vector<std::unique_ptr<render::TextureMapper>>& texture_mappers) override;
 private:
   template<VkBufferUsageFlagBits usage>
   [[nodiscard]] StagingBuffer TransferBufferToStaging(const TransferBuffer& transfer_buffer) const;

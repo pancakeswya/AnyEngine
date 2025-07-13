@@ -16,7 +16,7 @@ struct Api {
   virtual void RenderFrame() = 0;
   virtual Object* LoadObject(
       GeometryTransferer& geometry_transferer,
-      std::vector<std::unique_ptr<TextureTransferer>>& texture_transferers
+      std::vector<std::unique_ptr<TextureMapper>>& texture_mappers
   ) = 0;
   virtual void OnResize(int width, int height) = 0;
 };

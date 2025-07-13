@@ -19,4 +19,4 @@ target_compile_definitions(render INTERFACE GLM_FORCE_RADIANS GLM_FORCE_DEPTH_ZE
 
 add_subdirectory(apis)
 add_subdirectory(parsers)
-add_subdirectory(transferers)
+add_subdirectory(mappers)

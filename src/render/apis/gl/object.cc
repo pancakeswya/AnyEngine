@@ -25,8 +25,4 @@ Object::Object(
     uniforms_mapped_(uniforms_.Map<render::Uniforms>(GL_WRITE_ONLY)),
     textures_(std::move(textures)) {}
 
-void Object::UpdateUniforms(const render::Uniforms* uniforms) {
-  std::memcpy(uniforms_mapped_, uniforms, sizeof(render::Uniforms));
-}
-
 } // namespace gl

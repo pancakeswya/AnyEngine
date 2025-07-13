@@ -25,7 +25,9 @@ public:
     std::vector<Texture>&& textures
   );
 
-  void UpdateUniforms(const render::Uniforms* uniforms) override;
+  [[nodiscard]] render::Uniforms* uniforms() const noexcept override {
+    return uniforms_mapped_;
+  }
 
   [[nodiscard]] const std::vector<Texture>& textures() const noexcept {
     return textures_;

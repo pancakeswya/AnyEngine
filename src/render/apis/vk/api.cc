@@ -4,6 +4,7 @@
 #include "render/apis/vk/shaders.h"
 
 #include <array>
+#include <cstring>
 #include <utility>
 #include <vector>
 #include <limits>
@@ -205,7 +206,7 @@ inline StagingBuffer Api::TransferBufferToStaging(
 
 render::Object* Api::LoadObject(
     render::GeometryTransferer& geometry_transferer,
-    std::vector<std::unique_ptr<render::TextureTransferer>>& texture_transferers
+    std::vector<std::unique_ptr<render::TextureMapper>>& texture_mappers
 ) {
   const render::GeometryInfo geometry_info = geometry_transferer.info();
   const std::vector<render::TextureIndices>& texture_indices = geometry_transferer.texture_indices();
@@ -225,17 +226,21 @@ render::Object* Api::LoadObject(
   StagingBuffer staging_indices = TransferBufferToStaging<VK_BUFFER_USAGE_INDEX_BUFFER_BIT>(transfer_indices);
 
   std::vector<StagingImage> images;
-  images.reserve(texture_transferers.size());
-  for (const std::unique_ptr<render::TextureTransferer>& texture_transferer : texture_transferers) {
-    const auto[width, height, format] = texture_transferer->info();
+  images.reserve(texture_mappers.size());
+  for (const std::unique_ptr<render::TextureMapper>& texture_mapper : texture_mappers) {
+    const auto[width, height, format] = texture_mapper->info();
 
     const SDL_PixelFormat sdl_format = MapFormat(format) == VK_FORMAT_UNDEFINED ? SDL_PIXELFORMAT_RGBA32 : format;
     const VkFormat vk_format = MapFormat(sdl_format);
 
-    const TransferBuffer transfer_texture(device_, width * height * SDL_BYTESPERPIXEL(sdl_format));
+    const size_t pixel_count = width * height * SDL_BYTESPERPIXEL(sdl_format);
 
-    const auto pixels = transfer_texture.memory().Map<uint8_t>();
-    texture_transferer->Transfer(pixels, sdl_format);
+    const TransferBuffer transfer_texture(device_, pixel_count);
+
+    const uint8_t* pixels = texture_mapper->Map(sdl_format);
+    const auto pixels_mapped = transfer_texture.memory().Map<uint8_t>();;
+    std::memcpy(pixels_mapped, pixels, pixel_count);
+
     transfer_texture.memory().Unmap();
 
     const VkExtent2D extent = {

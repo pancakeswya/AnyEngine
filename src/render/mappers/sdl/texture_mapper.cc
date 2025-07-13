@@ -1,24 +1,23 @@
-#include "render/transferers/sdl/texture_transferer.h"
-
 #include <SDL3_image/SDL_image.h>
 
 #include <cstring>
 
-#include "render/transferers/sdl/error.h"
+#include "render/mappers/sdl/error.h"
+#include "render/mappers/sdl/texture_mapper.h"
 
 namespace sdl {
 
-TextureTransferer::TextureTransferer(const std::string& path) : surface_(IMG_Load(path.c_str())) {
+TextureMapper::TextureMapper(const std::string& path) : surface_(IMG_Load(path.c_str())) {
   if (surface_ == nullptr) {
     throw Error("Failed to load image: " + path);
   }
 }
 
-TextureTransferer::~TextureTransferer() {
+TextureMapper::~TextureMapper() {
   SDL_DestroySurface(surface_);
 }
 
-render::TextureInfo TextureTransferer::info() const noexcept {
+render::TextureInfo TextureMapper::info() const noexcept {
   return {
     .width = static_cast<uint32_t>(surface_->w),
     .height = static_cast<uint32_t>(surface_->h),
@@ -26,7 +25,7 @@ render::TextureInfo TextureTransferer::info() const noexcept {
   };
 }
 
-void TextureTransferer::Transfer(uint8_t* pixels, SDL_PixelFormat format) {
+uint8_t* TextureMapper::Map(const SDL_PixelFormat format) {
   if (surface_->format != format) {
     SDL_Surface* surface = SDL_ConvertSurface(surface_, format);
     if (surface == nullptr) {
@@ -38,7 +37,7 @@ void TextureTransferer::Transfer(uint8_t* pixels, SDL_PixelFormat format) {
   if (!SDL_FlipSurface(surface_, SDL_FLIP_VERTICAL)) {
     throw Error(std::string("Failed to flip surface: ") + SDL_GetError());
   }
-  std::memcpy(pixels, surface_->pixels, surface_->pitch * surface_->h);
+  return static_cast<uint8_t*>(surface_->pixels);
 }
 
 } // namespace sdl

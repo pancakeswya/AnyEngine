@@ -1,7 +1,6 @@
 #include "render/apis/vk/object.h"
 
 #include <utility>
-#include <cstring>
 
 namespace vk {
 
@@ -99,12 +98,6 @@ Object::Object(
 
 void Object::SetFrameIndex(const size_t frame_index) noexcept {
   frame_index_ = frame_index;
-}
-
-void Object::UpdateUniforms(const render::Uniforms* uniforms) {
-  if (uniforms != nullptr) {
-    std::memcpy(uniforms_mapped_[frame_index_], uniforms, sizeof(render::Uniforms));
-  }
 }
 
 } // namespace vk

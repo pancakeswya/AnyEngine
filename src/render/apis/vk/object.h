@@ -51,9 +51,12 @@ public:
     size_t frame_count
   );
 
-  void UpdateUniforms(const render::Uniforms* uniforms) override;
 
   void SetFrameIndex(size_t frame_index) noexcept;
+
+  [[nodiscard]]render::Uniforms* uniforms() const noexcept override {
+    return uniforms_mapped_[frame_index_];
+  }
 
   [[nodiscard]] const StagingBuffer& vertices() const noexcept {
     return vertices_;
