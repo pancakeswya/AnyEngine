@@ -5,11 +5,12 @@
 #include "render/apis/gl/handle.h"
 
 #include <vector>
+#include <string>
 
 namespace gl {
 
 struct ShaderInfo {
-  const char* code;
+  std::string code;
   GLenum type;
 };
 
@@ -22,7 +23,7 @@ struct Shader : RUNTIME_HANDLE(GLuint, glDeleteShader) {
 struct ShaderProgram : RUNTIME_HANDLE(GLuint, glDeleteProgram) {
   DECLARE_DEFAULT_NO_COPY_CLASS(ShaderProgram);
 
-  explicit ShaderProgram(const std::vector<ShaderInfo>& infos);
+  explicit ShaderProgram(std::vector<ShaderInfo>&& infos);
 };
 
 } // namespace gl

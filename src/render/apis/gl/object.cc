@@ -22,7 +22,13 @@ Object::Object(
     vertices_(std::move(vertices)),
     indices_(std::move(indices)),
     uniforms_(std::move(uniforms)),
-    uniforms_mapped_(uniforms_.Map<render::Uniforms>(GL_WRITE_ONLY)),
+    uniforms_mapped_(
+#ifdef USE_BUFFER_MAP
+      uniforms_.Map<render::Uniforms>(GL_WRITE_ONLY)
+#else
+      std::make_unique<render::Uniforms>()
+#endif
+    ),
     textures_(std::move(textures)) {}
 
 } // namespace gl

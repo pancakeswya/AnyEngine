@@ -1,5 +1,3 @@
-#version 150
-
 in vec3 inPosition;
 in vec3 inNormal;
 in vec2 inTexCoord;

@@ -1,5 +1,7 @@
 #include "render/apis/gl/shaders.h"
 
+#include "render/apis/gl/loader.h"
+
 namespace gl {
 
 std::vector<ShaderInfo> GetShaderInfos() {

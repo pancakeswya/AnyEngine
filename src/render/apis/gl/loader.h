@@ -1,7 +1,7 @@
 #ifndef RENDER_APIS_GL_LOADER_H_
 #define RENDER_APIS_GL_LOADER_H_
 
-#if defined(RENDER_OPENGL_ES2)
+#ifdef RENDER_OPENGL_ES2
 #include <glad/gles2.h>
 #else
 #include <glad/gl.h>

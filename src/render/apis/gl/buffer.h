@@ -4,7 +4,9 @@
 #include "render/apis/gl/loader.h"
 #include "render/apis/gl/handle.h"
 #include "render/apis/gl/check.h"
+#ifdef USE_BUFFER_MAP
 #include "render/apis/gl/error.h"
+#endif
 
 namespace gl {
 
@@ -17,7 +19,6 @@ struct VertexArrayBuffer : ArrayHandle {
 
   VertexArrayBuffer() 
     : ArrayHandle(glGenVertexArrays, glDeleteVertexArrays) {}
-
 
   void Bind() const {
     GL_CHECK(glBindVertexArray(handle_));
@@ -43,10 +44,13 @@ public:
     GL_CHECK(glBindBuffer(type_, 0));
   }
 
-  void Allocate(const size_t size, const GLenum usage) const {
+  void Allocate(const size_t size, const GLenum usage) {
     GL_CHECK(glBufferData(type_, static_cast<GLsizeiptr>(size),  nullptr, usage));
+    allocated_size_ = size;
   }
 
+  [[nodiscard]] size_t allocated_size() const noexcept { return allocated_size_; }
+#ifdef USE_BUFFER_MAP
   template<typename T>
   T* Map(const GLenum access) const {
     void* mapped = glMapBuffer(type_, access);
@@ -59,9 +63,16 @@ public:
   void Unmap() const {
     glUnmapBuffer(type_);
   }
+#else
+  template<typename T>
+  void Copy(const T* data, const size_t size) const {
+    GL_CHECK(glBufferSubData(type_, 0,  static_cast<GLsizeiptr>(size), static_cast<const void*>(data)));
+  }
+#endif
 
 private:
   GLenum type_ = GL_INVALID_VALUE;
+  size_t allocated_size_ = 0;
 };
 
 } // namespace gl

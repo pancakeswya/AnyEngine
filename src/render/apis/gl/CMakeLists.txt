@@ -26,7 +26,20 @@ make_plugin(gl_api
         shaders.cc
 )
 
-find_package(OpenGL REQUIRED)
+option(USE_GLES "Use gles as gl backend" ON)
+
+if (ANDROID OR EMSCRIPTEN)
+    set(GLAD_GL_ARG gles2:core=3.0)
+    target_compile_definitions(gl_api PUBLIC RENDER_OPENGL_ES2)
+    if (ANDROID)
+        target_link_libraries(gl_api PUBLIC GLESv3)
+    endif()
+else()
+    find_package(OpenGL REQUIRED)
+    set(GLAD_GL_ARG gl:core=3.3)
+    target_compile_definitions(gl_api PUBLIC USE_BUFFER_MAP)
+    target_link_libraries(gl_api PUBLIC OpenGL::GL)
+endif()
 
 if (NOT TARGET SDL3::SDL3)
     find_package(SDL3 REQUIRED)
@@ -40,8 +53,8 @@ if (NOT TARGET glad)
             SOURCE_SUBDIR cmake
     )
     FetchContent_MakeAvailable(glad)
-    glad_add_library(glad STATIC API gl:core=3.3 LOCATION ${CMAKE_BINARY_DIR}/glad-build/${TARGET})
+    glad_add_library(glad STATIC API ${GLAD_GL_ARG} LOCATION ${CMAKE_BINARY_DIR}/glad-build/${TARGET})
 endif()
 
 target_compile_definitions(gl_api PUBLIC USE_VAO)
-target_link_libraries(gl_api PUBLIC SDL3::SDL3 glad OpenGL::GL render)
+target_link_libraries(gl_api PUBLIC SDL3::SDL3 glad render)

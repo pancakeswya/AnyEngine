@@ -18,7 +18,8 @@ inline void LinkShaderProgram(const GLuint program) {
 } // namespace
 
 Shader::Shader(const ShaderInfo& info) : Handle(glCreateShader(info.type), glDeleteShader) {
-  glShaderSource(handle_, 1, &info.code, nullptr);
+  const char* code = info.code.c_str();
+  glShaderSource(handle_, 1, &code, nullptr);
   glCompileShader(handle_);
 
   GLint status;
@@ -28,13 +29,18 @@ Shader::Shader(const ShaderInfo& info) : Handle(glCreateShader(info.type), glDel
   }
 }
 
-ShaderProgram::ShaderProgram(const std::vector<ShaderInfo>& infos) : Handle(glCreateProgram(), glDeleteProgram) {
+ShaderProgram::ShaderProgram(std::vector<ShaderInfo>&& infos) : Handle(glCreateProgram(), glDeleteProgram) {
   glEnable(GL_DEPTH_TEST);
   glActiveTexture(GL_TEXTURE0);
 
   std::vector<Shader> shaders;
   shaders.reserve(infos.size());
-  for(const ShaderInfo& info : infos) {
+  for(ShaderInfo& info : infos) {
+#ifdef RENDER_OPENGL_ES2
+    info.code = "#version 300 es\n" + info.code;
+#else
+    info.code = "#version 150\n" + info.code;
+#endif
     shaders.emplace_back(info);
   }
   for(const Shader& shader : shaders) {

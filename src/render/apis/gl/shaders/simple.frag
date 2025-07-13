@@ -1,5 +1,3 @@
-#version 150
-
 #ifdef GL_ES
 precision mediump float;
 #endif
@@ -10,7 +8,7 @@ in vec3 fragNormal;
 uniform sampler2D texSampler;
 
 void main() {
-    if (fragNormal.x == 100000000) {
+    if (fragNormal.x > 100000000.0) {
         return;
     }
     out_FragColor = texture(texSampler, fragTexCoord);

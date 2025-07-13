@@ -66,10 +66,15 @@ render::Object* Api::LoadObject(
   uniform_buffer.Bind();
   uniform_buffer.Allocate(sizeof(render::Uniforms), GL_DYNAMIC_DRAW);
 
+#ifdef USE_BUFFER_MAP
   const auto indices = indices_buffer.Map<render::Index>(GL_WRITE_ONLY);
   const auto vertices = vertices_buffer.Map<render::Vertex>(GL_WRITE_ONLY);
-
   geometry_transferer.Transfer(vertices, indices);
+#else
+  std::vector<render::Vertex> vertices(vertices_buffer.allocated_size());
+  std::vector<render::Index> indices(indices_buffer.allocated_size());
+  geometry_transferer.Transfer(vertices.data(), indices.data());
+#endif
 
   const GLuint pos_loc = glGetAttribLocation(program_, "inPosition");
   GL_CHECK(glVertexAttribPointer(pos_loc, 3, GL_FLOAT, GL_FALSE,  8 * sizeof(float), nullptr));
@@ -87,9 +92,13 @@ render::Object* Api::LoadObject(
   GL_CHECK(glUniformBlockBinding(program_, ubo_index, 0));
   GL_CHECK(glBindBufferBase(GL_UNIFORM_BUFFER, ubo_index, uniform_buffer));
 
+#ifdef USE_BUFFER_MAP
   indices_buffer.Unmap();
   vertices_buffer.Unmap();
-
+#else
+  vertices_buffer.Copy(vertices.data(), vertices.size());
+  indices_buffer.Copy(indices.data(), indices.size());
+#endif
   std::vector<Texture> textures;
   textures.reserve(texture_mappers.size());
   for (const std::unique_ptr<render::TextureMapper>& texture_mapper : texture_mappers) {

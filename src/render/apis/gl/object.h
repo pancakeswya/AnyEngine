@@ -7,6 +7,10 @@
 
 #include <vector>
 
+#ifndef USE_BUFFER_MAP
+#include <memory>
+#endif
+
 namespace gl {
 
 class Object final : public render::Object {
@@ -26,7 +30,13 @@ public:
   );
 
   [[nodiscard]] render::Uniforms* uniforms() const noexcept override {
+#ifdef USE_BUFFER_MAP
     return uniforms_mapped_;
+#else
+    render::Uniforms* uniforms = uniforms_mapped_.get();
+    uniforms_.Copy(uniforms, sizeof(render::Uniforms));
+    return uniforms;
+#endif
   }
 
   [[nodiscard]] const std::vector<Texture>& textures() const noexcept {
@@ -39,7 +49,12 @@ private:
   Buffer vertices_;
   Buffer indices_;
   Buffer uniforms_;
-  render::Uniforms* uniforms_mapped_;
+#ifdef USE_BUFFER_MAP
+  render::Uniforms*
+#else
+  std::unique_ptr<render::Uniforms>
+#endif
+    uniforms_mapped_;
 
   std::vector<Texture> textures_;
 };
