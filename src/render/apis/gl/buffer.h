@@ -13,11 +13,11 @@ struct VertexArrayBuffer : ArrayHandle {
   VertexArrayBuffer(VertexArrayBuffer&& other) noexcept = default;
   VertexArrayBuffer& operator=(const VertexArrayBuffer& other) = delete;
   VertexArrayBuffer& operator=(VertexArrayBuffer&& other) noexcept = default;
+  ~VertexArrayBuffer() = default;
 
   VertexArrayBuffer() 
     : ArrayHandle(glGenVertexArrays, glDeleteVertexArrays) {}
 
-  ~VertexArrayBuffer() = default;
 
   void Bind() const {
     GL_CHECK(glBindVertexArray(handle_));

@@ -50,14 +50,6 @@ render::Object* Api::LoadObject(
   const render::GeometryInfo geometry_info = geometry_transferer.info();
   const std::vector<render::TextureIndices>& texture_indices = geometry_transferer.texture_indices();
 
-  Buffer uniform_buffer(GL_UNIFORM_BUFFER);
-  uniform_buffer.Bind();
-  uniform_buffer.Allocate(sizeof(render::Uniforms), GL_STATIC_DRAW);
-
-  const GLuint ubo_index = glGetUniformBlockIndex(program_, "ubo");
-  GL_CHECK(glUniformBlockBinding(program_, ubo_index, 0));
-  GL_CHECK(glBindBufferBase(GL_UNIFORM_BUFFER, 0, uniform_buffer));
-
 #ifdef USE_VAO
   VertexArrayBuffer array_buffer;
   array_buffer.Bind();
@@ -69,6 +61,10 @@ render::Object* Api::LoadObject(
   Buffer vertices_buffer(GL_ARRAY_BUFFER);
   vertices_buffer.Bind();
   vertices_buffer.Allocate(sizeof(render::Vertex) * geometry_info.vertex_count, GL_STATIC_DRAW);
+
+  Buffer uniform_buffer(GL_UNIFORM_BUFFER);
+  uniform_buffer.Bind();
+  uniform_buffer.Allocate(sizeof(render::Uniforms), GL_DYNAMIC_DRAW);
 
   const auto indices = indices_buffer.Map<render::Index>(GL_WRITE_ONLY);
   const auto vertices = vertices_buffer.Map<render::Vertex>(GL_WRITE_ONLY);
@@ -86,6 +82,10 @@ render::Object* Api::LoadObject(
   const GLuint tex_loc = glGetAttribLocation(program_, "inTexCoord");
   GL_CHECK(glVertexAttribPointer(tex_loc, 2, GL_FLOAT, GL_FALSE,  8 * sizeof(float), reinterpret_cast<void*>(6 * sizeof(GLfloat))));
   GL_CHECK(glEnableVertexAttribArray(tex_loc));
+
+  const GLuint ubo_index = glGetUniformBlockIndex(program_, "ubo");
+  GL_CHECK(glUniformBlockBinding(program_, ubo_index, 0));
+  GL_CHECK(glBindBufferBase(GL_UNIFORM_BUFFER, ubo_index, uniform_buffer));
 
   indices_buffer.Unmap();
   vertices_buffer.Unmap();
