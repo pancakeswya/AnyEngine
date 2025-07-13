@@ -17,7 +17,9 @@ public:
 
   ArrayHandle() = default;
 
-  explicit ArrayHandle(CreateFuncType create, DestroyFuncType destroy, const GLsizei size = 1) 
+  explicit ArrayHandle(const CreateFuncType create,
+                       const DestroyFuncType destroy,
+                       const GLsizei size = 1)
     : size_(size), destroy_(destroy) {
     create(size, &handle_);
   }
@@ -56,7 +58,7 @@ protected:
   GLuint handle_ = GL_INVALID_VALUE;
   GLsizei size_ = 0;
 private:
-  DestroyFuncType destroy_;
+  DestroyFuncType destroy_ = nullptr;
 
   void Destroy() noexcept {
     if (handle_ != GL_INVALID_VALUE) {
@@ -77,7 +79,8 @@ public:
   Handle(const Handle& other) = delete;
 
   Handle(Handle&& other) noexcept :
-    handle_(std::exchange(other.handle_, 0)) {}
+    handle_(std::exchange(other.handle_, 0)),
+    destroy_(std::exchange(other.destroy_, nullptr)) {}
 
   ~Handle() {
     Destroy();
@@ -89,6 +92,7 @@ public:
     if (this != &other) {
       Destroy();
       handle_ = std::exchange(other.handle_, 0);
+      destroy_ = std::exchange(other.destroy_, nullptr);
     }
     return *this;
   }
@@ -104,6 +108,7 @@ private:
   void Destroy() noexcept {
     if (handle_ != 0) {
       destroy_(handle_);
+      handle_ = 0;
     }
   }
 };
