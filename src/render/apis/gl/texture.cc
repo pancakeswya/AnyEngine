@@ -4,7 +4,8 @@
 
 namespace gl {
 
-Texture::Texture(const GLenum format, const uint8_t* data, const int width, const int height) {
+Texture::Texture(const GLenum format, const uint8_t* data, const int width, const int height) 
+  : ArrayHandle(glGenTextures, glDeleteTextures) {
   GL_CHECK(glBindTexture(GL_TEXTURE_2D, handle_));
   GL_CHECK(glPixelStorei(GL_UNPACK_ALIGNMENT, 1));
   GL_CHECK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT));

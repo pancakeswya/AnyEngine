@@ -17,7 +17,7 @@ inline void LinkShaderProgram(const GLuint program) {
 
 } // namespace
 
-Shader::Shader(const ShaderInfo& info) : Handle(glCreateShader(info.type)) {
+Shader::Shader(const ShaderInfo& info) : Handle(glCreateShader(info.type), glDeleteShader) {
   glShaderSource(handle_, 1, &info.code, nullptr);
   glCompileShader(handle_);
 
@@ -28,7 +28,7 @@ Shader::Shader(const ShaderInfo& info) : Handle(glCreateShader(info.type)) {
   }
 }
 
-ShaderProgram::ShaderProgram(const std::vector<ShaderInfo>& infos) : Handle(glCreateProgram()) {
+ShaderProgram::ShaderProgram(const std::vector<ShaderInfo>& infos) : Handle(glCreateProgram(), glDeleteProgram) {
   glEnable(GL_DEPTH_TEST);
   glActiveTexture(GL_TEXTURE0);
 

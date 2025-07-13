@@ -31,12 +31,16 @@ SDL_GLContext CreateContext(SDL_Window* window) {
   if (context == nullptr) {
     throw Error(std::string("Failed to create SDL context with error:") + SDL_GetError());
   }
+  if (!InitLoader()) {
+    throw Error("Failed to load GL/GLES");
+  }
   return context;
 }
 
 } // namespace
 
-Context::Context(SDL_Window* window) : Handle(CreateContext(window)) {
+Context::Context(SDL_Window* window) 
+  : Handle(CreateContext(window), SDL_GL_DestroyContext) {
   SDL_GL_MakeCurrent(window, handle_);
   SDL_GL_SetSwapInterval(1);
 }

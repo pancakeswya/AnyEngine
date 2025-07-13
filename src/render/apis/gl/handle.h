@@ -6,13 +6,18 @@
 
 #include <utility>
 
+#define RUNTIME_HANDLE(TYPE1, DESTROY_FUNC) Handle<TYPE1, decltype(DESTROY_FUNC)>
+
 namespace gl {
 
-template<void(*CreateFunc)(GLsizei, GLuint*), void(*DestroyFunc)(GLsizei, const GLuint*)>
 class ArrayHandle {
 public:
-  explicit ArrayHandle(const GLsizei size = 1) : size_(size) {
-    CreateFunc(size, &handle_);
+  using CreateFuncType = void(*)(GLsizei, GLuint*);
+  using DestroyFuncType = void(*)(GLsizei, const GLuint*);
+
+  explicit ArrayHandle(CreateFuncType create, DestroyFuncType destroy, const GLsizei size = 1) 
+    : size_(size), destroy_(destroy) {
+    create(size, &handle_);
   }
 
   ArrayHandle(const ArrayHandle& other) = delete;
@@ -47,21 +52,23 @@ protected:
   GLuint handle_ = GL_INVALID_VALUE;
   GLsizei size_ = 0;
 private:
+  DestroyFuncType destroy_;
+
   void Destroy() noexcept {
     if (handle_ != GL_INVALID_VALUE) {
-      DestroyFunc(1, &handle_);
+      destroy_(size_, &handle_);
       handle_ = GL_INVALID_VALUE;
     }
   }
 };
 
-template<typename HandleType, auto DestroyFunc>
+template<typename HandleType, typename DestroyFuncType>
 class Handle {
 public:
   Handle() noexcept : handle_(0) {}
 
-  explicit Handle(HandleType handle) noexcept
-     : handle_(handle) {}
+  explicit Handle(HandleType handle, DestroyFuncType destroy) noexcept
+     : handle_(handle), destroy_(destroy) {}
 
   Handle(const Handle& other) = delete;
 
@@ -88,9 +95,11 @@ public:
 protected:
   HandleType handle_;
 private:
+  DestroyFuncType destroy_;
+
   void Destroy() noexcept {
     if (handle_ != 0) {
-      DestroyFunc(handle_);
+      destroy_(handle_);
     }
   }
 };

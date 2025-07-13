@@ -7,7 +7,7 @@
 
 namespace gl {
 
-struct Context : Handle<SDL_GLContext, SDL_GL_DestroyContext> {
+struct Context : RUNTIME_HANDLE(SDL_GLContext, &SDL_GL_DestroyContext) {
   explicit Context(SDL_Window* window);
   ~Context() = default;
 };

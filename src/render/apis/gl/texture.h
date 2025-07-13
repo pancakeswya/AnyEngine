@@ -8,7 +8,7 @@
 
 namespace gl {
 
-struct Texture : ArrayHandle<glGenTextures, glDeleteTextures> {
+struct Texture : ArrayHandle {
   DECLARE_DEFAULT_NO_COPY_CLASS(Texture);
 
   Texture(GLenum format, const uint8_t* data, int width, int height);

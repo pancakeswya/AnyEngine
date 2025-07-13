@@ -8,7 +8,17 @@
 
 namespace gl {
 
-struct VertexArrayBuffer : ArrayHandle<glGenVertexArrays, glDeleteVertexArrays> {
+struct VertexArrayBuffer : ArrayHandle {
+  VertexArrayBuffer(const VertexArrayBuffer& other) = delete;
+  VertexArrayBuffer(VertexArrayBuffer&& other) noexcept = default;
+  VertexArrayBuffer& operator=(const VertexArrayBuffer& other) = delete;
+  VertexArrayBuffer& operator=(VertexArrayBuffer&& other) noexcept = default;
+
+  VertexArrayBuffer() 
+    : ArrayHandle(glGenVertexArrays, glDeleteVertexArrays) {}
+
+  ~VertexArrayBuffer() = default;
+
   void Bind() const {
     GL_CHECK(glBindVertexArray(handle_));
   }
@@ -18,12 +28,12 @@ struct VertexArrayBuffer : ArrayHandle<glGenVertexArrays, glDeleteVertexArrays> 
   }
 };
 
-class Buffer : public ArrayHandle<glGenBuffers, glDeleteBuffers> {
+class Buffer : public ArrayHandle {
 public:
   DECLARE_DEFAULT_NO_COPY_CLASS(Buffer);
 
   explicit Buffer(const GLenum type, const GLsizei size = 1)
-    : ArrayHandle(size), type_(type) {}
+    : ArrayHandle(glGenBuffers, glDeleteBuffers, size), type_(type) {}
 
   void Bind() const {
     GL_CHECK(glBindBuffer(type_, handle_));
