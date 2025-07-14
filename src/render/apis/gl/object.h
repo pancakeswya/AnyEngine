@@ -31,7 +31,7 @@ public:
 
   [[nodiscard]] render::Uniforms* uniforms() const noexcept override {
 #ifdef USE_BUFFER_MAP
-    return uniforms_mapped_;
+    return uniforms_.Map<render::Uniforms>(Buffer::kWriteBit);
 #else
     return uniforms_mapped_.get();
 #endif
@@ -40,7 +40,6 @@ public:
   void UpdateUniforms() override {
 #ifdef USE_BUFFER_MAP
     uniforms_.Unmap();
-    uniforms_mapped_ = uniforms_.Map<render::Uniforms>(Buffer::kWriteBit);
 #else
     uniforms_.Copy(uniforms_mapped_.get(), sizeof(render::Uniforms));
 #endif
@@ -57,11 +56,11 @@ private:
   Buffer indices_;
   Buffer uniforms_;
 #ifdef USE_BUFFER_MAP
-  mutable render::Uniforms*
+  render::Uniforms*
 #else
   std::unique_ptr<render::Uniforms>
 #endif
-    uniforms_mapped_;
+    uniforms_mapped_ = nullptr;
 
   std::vector<Texture> textures_;
 };

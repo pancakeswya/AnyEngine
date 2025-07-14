@@ -24,7 +24,7 @@ Object::Object(
     uniforms_(std::move(uniforms)),
     uniforms_mapped_(
 #ifdef USE_BUFFER_MAP
-      uniforms_.Map<render::Uniforms>(Buffer::kWriteBit)
+      nullptr
 #else
       std::make_unique<render::Uniforms>()
 #endif
