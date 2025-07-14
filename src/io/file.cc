@@ -7,6 +7,10 @@
 
 namespace io {
 
+bool PathExists(const std::string& path) {
+  return SDL_GetPathInfo(path.c_str(), nullptr);
+}
+
 std::filesystem::path BasePath() {
 #if __ANDROID__
   std::filesystem::path base_path = "";

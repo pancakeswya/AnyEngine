@@ -2,10 +2,8 @@
 #define APP_H_
 
 #include "base/error.h"
-#include "render/api.h"
 #include "render/api_plugin_import.h"
 #include "render/object.h"
-#include "render/object_parser.h"
 #include "render/object_parser_plugin_import.h"
 
 #include <SDL3/SDL.h>

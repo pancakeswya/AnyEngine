@@ -5,6 +5,7 @@
 
 #include "io/file.h"
 #include "render/mappers/sdl/texture_mapper.h"
+#include "render/mappers/mock/texture_mapper.h"
 
 namespace {
 
@@ -27,12 +28,17 @@ SDL_Window* CreateWindow(const SDL_WindowFlags window_flags) {
 render::Object* LoadObject(const std::string& filename,
                            const render::ApiHandle& api_handle,
                            const render::ObjectParserHandle& object_parser_handle) {
+  const std::string path = (io::BasePath() / filename).string();
   std::vector<std::string> texture_paths;
-  render::GeometryTransferer& geometry_transferer = object_parser_handle->Parse((io::BasePath() / filename).string(), texture_paths);
+  render::GeometryTransferer& geometry_transferer = object_parser_handle->Parse(path, texture_paths);
   std::vector<std::unique_ptr<render::TextureMapper>> texture_mappers;
   texture_mappers.reserve(texture_paths.size());
   for (const std::string& texture_path : texture_paths) {
-    texture_mappers.emplace_back(std::make_unique<sdl::TextureMapper>(texture_path));
+    if (!io::PathExists(texture_path)) {
+      texture_mappers.emplace_back(std::make_unique<mock::TextureMapper>());
+    } else {
+      texture_mappers.emplace_back(std::make_unique<sdl::TextureMapper>(texture_path));
+    }
   }
   return api_handle->LoadObject(geometry_transferer, texture_mappers);
 }
@@ -48,10 +54,10 @@ void App::Init() {
   api_handle_ = api_plugin_.CreateHandle(window_);
   object_parser_handle_ = object_parser_plugin_.CreateHandle();
   object_ = LoadObject(
-#ifndef __EMSCRIPTEN__
-    "obj/tommy/"
-#endif
-    "tommy.obj", api_handle_, object_parser_handle_);
+    "obj/Madara Uchiha/obj/Madara_Uchiha.obj",
+    api_handle_,
+    object_parser_handle_
+  );
 }
 
 SDL_AppResult App::HandleEvent(const SDL_Event* event) const {
