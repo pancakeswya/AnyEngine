@@ -43,7 +43,8 @@ VkSwapchainKHR CreateSwapchain(
   const Device& device,
   VkSurfaceKHR surface,
   const VkExtent2D size,
-  ImageInfo& info
+  ImageInfo& info,
+  VkSwapchainKHR old_swapchain
 ) {
   const auto [capabilities, formats, present_modes] = device.physical_device().GetSurfaceSupport(surface);
   const auto[format, color_space] = ChooseSurfaceFormat(formats);
@@ -62,7 +63,8 @@ VkSwapchainKHR CreateSwapchain(
     .imageColorSpace = color_space,
     .imageExtent = extent,
     .imageArrayLayers = 1,
-    .imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT
+    .imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+    .oldSwapchain = old_swapchain
   };
   const std::array queue_family_indices = {
     device.queues().graphics.family_index(),
@@ -99,8 +101,9 @@ VkSwapchainKHR CreateSwapchain(
 Swapchain::Swapchain(
   const Device& device,
   const Surface& surface,
-  const VkExtent2D extent
-) : NonDispatchableHandle(CreateSwapchain(device,surface, extent, image_info_), device) {}
+  const VkExtent2D extent,
+  VkSwapchainKHR old_swapchain
+) : NonDispatchableHandle(CreateSwapchain(device,surface, extent, image_info_, old_swapchain), device) {}
 
 std::vector<VkImage> Swapchain::images() const {
   uint32_t image_count;

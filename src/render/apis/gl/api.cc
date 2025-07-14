@@ -24,7 +24,8 @@ Api::Api(SDL_Window* window)
     program_(GetShaderInfos()),
     window_(window) {}
 
-void Api::OnResize(const int width, const int height) {
+void Api::OnResize(int width, int height) {
+  SDL_GetWindowSizeInPixels(window_, &width, &height);
   GL_CHECK(glViewport(0, 0, width, height));
 }
 
@@ -41,6 +42,7 @@ void Api::RenderFrame() {
       prev_offset = offset;
     }
   }
+  glFinish();
   SDL_GL_SwapWindow(window_);
 }
 

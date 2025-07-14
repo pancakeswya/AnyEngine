@@ -58,13 +58,13 @@ inline Device SelectDevice(const std::vector<VkPhysicalDevice>& physical_devices
   return Device::Select(physical_devices, requirements);
 }
 
-inline Swapchain CreateSwapchain(const Device& device, const Surface& surface, SDL_Window* window) {
+inline Swapchain CreateSwapchain(const Device& device, const Surface& surface, SDL_Window* window, VkSwapchainKHR old_swapchain = VK_NULL_HANDLE) {
   VkExtent2D size;
   SDL_GetWindowSize(window,
     reinterpret_cast<int*>(&size.width),
     reinterpret_cast<int*>(&size.height)
   );
-  return {device, surface, size};
+  return {device, surface, size, old_swapchain};
 }
 
 inline Image CreateDepthImage(const Device& device, const Swapchain& swapchain) {
@@ -283,8 +283,7 @@ void Api::RecreateSwapchain() {
   if (const VkResult result = vkDeviceWaitIdle(device_); result != VK_SUCCESS) {
     throw Error("failed to idle device");
   }
-  swapchain_ = {};
-  swapchain_ = CreateSwapchain(device_, surface_, window_);
+  swapchain_ = CreateSwapchain(device_, surface_, window_, swapchain_);
   depth_image_ = CreateDepthImage(device_, swapchain_);
   image_presents_ = CreateSwapchainImagePresents(device_, swapchain_, render_pass_, depth_image_.view());
   

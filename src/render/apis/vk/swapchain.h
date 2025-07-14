@@ -19,7 +19,8 @@ public:
   Swapchain(
     const Device& device,
     const Surface& surface,
-    VkExtent2D extent
+    VkExtent2D extent,
+    VkSwapchainKHR old_swapchain
   );
 
   [[nodiscard]] std::vector<VkImage> images() const;
