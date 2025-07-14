@@ -47,7 +47,11 @@ App::App()
 void App::Init() {
   api_handle_ = api_plugin_.CreateHandle(window_);
   object_parser_handle_ = object_parser_plugin_.CreateHandle();
-  object_ = LoadObject("obj/tommy/tommy.obj", api_handle_, object_parser_handle_);
+  object_ = LoadObject(
+#ifndef __EMSCRIPTEN__
+    "obj/tommy/"
+#endif
+    "tommy.obj", api_handle_, object_parser_handle_);
 }
 
 SDL_AppResult App::HandleEvent(const SDL_Event* event) const {

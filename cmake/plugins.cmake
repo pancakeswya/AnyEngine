@@ -1,7 +1,12 @@
 include_guard()
 
 function(make_plugin NAME)
-    add_library(${NAME} SHARED)
+    if(EMSCRIPTEN)
+        set(PLUGIN_LIBRARY_TYPE STATIC)
+    else()
+        set(PLUGIN_LIBRARY_TYPE SHARED)
+    endif()
+    add_library(${NAME} ${PLUGIN_LIBRARY_TYPE})
     target_sources(${NAME} PUBLIC ${ARGN})
     target_compile_definitions(${NAME} PUBLIC PLUGIN_SHARED PLUGIN_EXPORT)
     set_target_properties(${NAME} PROPERTIES PREFIX "lib")

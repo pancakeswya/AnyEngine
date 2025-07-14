@@ -1,2 +1,6 @@
-add_subdirectory(vk)
-add_subdirectory(gl)
+if (BUILD_VK_API)
+    add_subdirectory(vk)
+endif()
+if (BUILD_GL_API)
+    add_subdirectory(gl)
+endif()
