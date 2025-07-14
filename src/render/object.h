@@ -45,6 +45,7 @@ public:
   }
 
   [[nodiscard]] virtual Uniforms* uniforms() const noexcept = 0;
+  virtual void UpdateUniforms() = 0;
 private:
   GeometryInfo info_ = {};
   std::vector<TextureIndices> texture_indices_;

@@ -33,9 +33,16 @@ public:
 #ifdef USE_BUFFER_MAP
     return uniforms_mapped_;
 #else
-    render::Uniforms* uniforms = uniforms_mapped_.get();
-    uniforms_.Copy(uniforms, sizeof(render::Uniforms));
-    return uniforms;
+    return uniforms_mapped_.get();
+#endif
+  }
+
+  void UpdateUniforms() override {
+#ifdef USE_BUFFER_MAP
+    uniforms_.Unmap();
+    uniforms_mapped_ = uniforms_.Map<render::Uniforms>(Buffer::kWriteBit);
+#else
+    uniforms_.Copy(uniforms_mapped_.get(), sizeof(render::Uniforms));
 #endif
   }
 
@@ -50,7 +57,7 @@ private:
   Buffer indices_;
   Buffer uniforms_;
 #ifdef USE_BUFFER_MAP
-  render::Uniforms*
+  mutable render::Uniforms*
 #else
   std::unique_ptr<render::Uniforms>
 #endif

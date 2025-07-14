@@ -83,6 +83,8 @@ SDL_AppResult App::Iterate() const {
   uniforms->proj = glm::perspective(glm::radians(45.0f), static_cast<float>(width) / static_cast<float>(height), 0.1f, 10.0f);
   uniforms->proj[1][1] *= -1;
 
+  object_->UpdateUniforms();
+
   return SDL_APP_CONTINUE;
 }
 

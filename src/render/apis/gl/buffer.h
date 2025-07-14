@@ -5,6 +5,9 @@
 #include "render/apis/gl/handle.h"
 #include "render/apis/gl/check.h"
 #ifdef USE_BUFFER_MAP
+#if !defined(glMapBuffer) && !defined(glMapBufferRange)
+#error "No buffer map available"
+#endif
 #include "render/apis/gl/error.h"
 #endif
 
@@ -32,6 +35,17 @@ struct VertexArrayBuffer : ArrayHandle {
 class Buffer : public ArrayHandle {
 public:
   DECLARE_DEFAULT_NO_COPY_CLASS(Buffer);
+#ifdef USE_BUFFER_MAP
+  enum MapBit : GLenum {
+#if defined(glMapBufferRange)
+    kWriteBit = GL_MAP_WRITE_BIT,
+    kReadBit = GL_MAP_READ_BIT
+#else
+    kWriteBit = GL_WRITE_ONLY,
+    kReadBit = GL_READ_ONLY
+#endif
+  };
+#endif
 
   explicit Buffer(const GLenum type, const GLsizei size = 1)
     : ArrayHandle(glGenBuffers, glDeleteBuffers, size), type_(type) {}
@@ -52,8 +66,12 @@ public:
   [[nodiscard]] size_t allocated_size() const noexcept { return allocated_size_; }
 #ifdef USE_BUFFER_MAP
   template<typename T>
-  T* Map(const GLenum access) const {
+  T* Map(const MapBit access) const {
+#if defined(glMapBufferRange)
+    void* mapped = glMapBufferRange(type_, 0,  static_cast<GLsizeiptr>(allocated_size_), access);
+#else
     void* mapped = glMapBuffer(type_, access);
+#endif
     if (mapped == nullptr) {
       throw Error("Failed to map indices");
     }

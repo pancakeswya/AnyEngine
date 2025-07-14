@@ -67,8 +67,8 @@ render::Object* Api::LoadObject(
   uniform_buffer.Allocate(sizeof(render::Uniforms), GL_DYNAMIC_DRAW);
 
 #ifdef USE_BUFFER_MAP
-  const auto indices = indices_buffer.Map<render::Index>(GL_WRITE_ONLY);
-  const auto vertices = vertices_buffer.Map<render::Vertex>(GL_WRITE_ONLY);
+  const auto indices = indices_buffer.Map<render::Index>(Buffer::kWriteBit);
+  const auto vertices = vertices_buffer.Map<render::Vertex>(Buffer::kWriteBit);
   geometry_transferer.Transfer(vertices, indices);
 #else
   std::vector<render::Vertex> vertices(vertices_buffer.allocated_size());

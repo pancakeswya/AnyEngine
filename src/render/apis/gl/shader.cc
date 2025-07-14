@@ -36,7 +36,7 @@ ShaderProgram::ShaderProgram(std::vector<ShaderInfo>&& infos) : Handle(glCreateP
   std::vector<Shader> shaders;
   shaders.reserve(infos.size());
   for(ShaderInfo& info : infos) {
-#ifdef RENDER_OPENGL_ES2
+#ifdef RENDER_OPENGL_ES3
     info.code = "#version 300 es\n" + info.code;
 #else
     info.code = "#version 150\n" + info.code;

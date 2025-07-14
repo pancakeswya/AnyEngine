@@ -26,12 +26,11 @@ make_plugin(gl_api
         shaders.cc
 )
 
-option(USE_GLES "Use gles as gl backend" ON)
-
 if (ANDROID OR EMSCRIPTEN)
     set(GLAD_GL_ARG gles2:core=3.0)
-    target_compile_definitions(gl_api PUBLIC RENDER_OPENGL_ES2)
+    target_compile_definitions(gl_api PUBLIC RENDER_OPENGL_ES3)
     if (ANDROID)
+        target_compile_definitions(gl_api PUBLIC USE_BUFFER_MAP)
         target_link_libraries(gl_api PUBLIC GLESv3)
     endif()
 else()

@@ -72,6 +72,8 @@ public:
   [[nodiscard]] const std::vector<SamplerDescriptorSet>& sampler_descriptor_sets() const noexcept {
     return sampler_descriptor_sets_;
   }
+  // buffers are persistent
+  void UpdateUniforms() override {}
 private:
   StagingBuffer vertices_;
   StagingBuffer indices_;
