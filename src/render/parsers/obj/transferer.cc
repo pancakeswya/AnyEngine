@@ -29,15 +29,20 @@ void GeometryTransferer::Transfer(render::Vertex* vertices, render::Index* indic
       index_map.emplace(index, combined_idx);
       const unsigned int i_v = index.fv * 3, i_n = index.fn * 3, i_t = index.ft * 2;
       glm::vec3 normal = {};
+      glm::vec2 texture = {};
       if (!data_.vn.empty()) {
         normal.x = data_.vn[i_n];
         normal.y = data_.vn[i_n + 1];
         normal.z = data_.vn[i_n + 2];
       }
+      if (!data_.vt.empty()) {
+        texture.x = data_.vt[i_t];
+        texture.y = data_.vt[i_t + 1];
+      }
       *vertices++ = render::Vertex{
         glm::vec3(data_.v[i_v], data_.v[i_v + 1], data_.v[i_v + 2]),
         normal,
-        glm::vec2(data_.vt[i_t], data_.vt[i_t + 1])
+        texture,
       };
       ++next_combined_idx;
     }

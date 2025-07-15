@@ -316,8 +316,14 @@ void ParseMtlBuffer(const std::vector<char>& buffer, Data& data) {
 }
 
 inline const char* ParseMtl(const char* ptr, Data& data) {
-  const std::string path_mtl = GetName(&ptr);
-  const std::vector<char> buffer = io::ReadFile(data.dir_path + path_mtl);
+  const std::string path_mtl = data.dir_path + GetName(&ptr);
+  std::vector<char> buffer;
+  try {
+    buffer = io::ReadFile(path_mtl);
+  } catch (const std::exception& exception) {
+    SDL_Log("Failed to read material file at path %s, error: %s", path_mtl.c_str(), exception.what());
+    return ptr;
+  }
   ParseMtlBuffer(buffer, data);
   return ptr;
 }

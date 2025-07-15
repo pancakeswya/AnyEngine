@@ -9,13 +9,14 @@
 #include "render/mappers/mock/texture_mapper.h"
 
 #include <filesystem>
+#include <sstream>
 
 namespace {
 
-SDL_Window* CreateWindow(const SDL_WindowFlags window_flags) {
+SDL_Window* CreateWindow(const std::string_view title, const SDL_WindowFlags window_flags) {
   const float main_scale = SDL_GetDisplayContentScale(SDL_GetPrimaryDisplay());
   SDL_Window* window = SDL_CreateWindow(
-    "3D Render",
+    title.data(),
     static_cast<int>(1280 * main_scale),
     static_cast<int>(720 * main_scale),
     SDL_WINDOW_RESIZABLE |
@@ -36,13 +37,17 @@ render::Object* LoadObject(const std::string& filename,
   render::GeometryTransferer& geometry_transferer = object_parser_handle->Parse(path, texture_paths);
   std::vector<std::unique_ptr<render::TextureMapper>> texture_mappers;
   texture_mappers.reserve(texture_paths.size());
-  for (const std::string& texture_path : texture_paths) {
-    try {
-      std::filesystem::path texture_filepath(texture_path);
-      texture_mappers.emplace_back(std::make_unique<sdl::TextureMapper>(texture_filepath.lexically_normal().string()));
-    } catch (const std::exception& exception) {
-      SDL_Log("Failed to load texture mapper: %s\n", exception.what());
-      texture_mappers.emplace_back(std::make_unique<mock::TextureMapper>());
+  if (texture_paths.empty()) {
+    texture_mappers.emplace_back(std::make_unique<mock::TextureMapper>());
+  } else {
+    for (const std::string& texture_path : texture_paths) {
+      try {
+        std::filesystem::path texture_filepath(texture_path);
+        texture_mappers.emplace_back(std::make_unique<sdl::TextureMapper>(texture_filepath.lexically_normal().string()));
+      } catch (const std::exception& exception) {
+        SDL_Log("Failed to load texture mapper: %s\n", exception.what());
+        texture_mappers.emplace_back(std::make_unique<mock::TextureMapper>());
+      }
     }
   }
   return api_handle->LoadObject(geometry_transferer, texture_mappers);
@@ -51,8 +56,8 @@ render::Object* LoadObject(const std::string& filename,
 } // namespace
 
 App::App()
-    : api_plugin_("libgl_api"),
-      window_(CreateWindow(api_plugin_.GetWindowFlags())),
+    : api_plugin_("libvk_api"),
+      window_(CreateWindow(kTitle, api_plugin_.GetWindowFlags())),
       object_parser_plugin_("libobj_parser") {}
 
 void App::Init() {
@@ -78,7 +83,8 @@ SDL_AppResult App::HandleEvent(const SDL_Event* event) const {
   return SDL_APP_CONTINUE;
 }
 
-SDL_AppResult App::Iterate() const {
+SDL_AppResult App::Iterate() {
+  UpdateFps();
   api_handle_->RenderFrame();
 
   static auto start_time = std::chrono::high_resolution_clock::now();
@@ -98,4 +104,14 @@ SDL_AppResult App::Iterate() const {
 
   return SDL_APP_CONTINUE;
 }
+
+void App::UpdateFps() {
+  const double fps = fps_counter_.Count();
+
+  std::stringstream oss;
+  oss.precision(1);
+  oss << kTitle << " (" << std::fixed << fps << " FPS)";
+  SDL_SetWindowTitle(window_, oss.str().c_str());
+}
+
 

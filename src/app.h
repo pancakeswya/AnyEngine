@@ -5,11 +5,14 @@
 #include "render/api_plugin_import.h"
 #include "render/object.h"
 #include "render/object_parser_plugin_import.h"
+#include "render/fps_counter.h"
 
 #include <SDL3/SDL.h>
 
 class App {
 public:
+  static constexpr std::string_view kTitle = "3D Render";
+
   static App* Cast(void *appstate) {
     return static_cast<App*>(appstate);
   }
@@ -24,8 +27,10 @@ public:
   void Init();
 
   [[nodiscard]] SDL_AppResult HandleEvent(const SDL_Event* event) const;
-  [[nodiscard]] SDL_AppResult Iterate() const;
+  [[nodiscard]] SDL_AppResult Iterate();
 private:
+  void UpdateFps();
+
   render::ApiPlugin api_plugin_;
   SDL_Window* window_;
 
@@ -35,6 +40,7 @@ private:
   render::ObjectParserHandle object_parser_handle_;
 
   render::Object* object_ = nullptr;
+  render::FpsCounter fps_counter_;
 };
 
 #endif // APP_H_
