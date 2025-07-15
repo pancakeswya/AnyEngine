@@ -120,7 +120,6 @@ Api::Api(SDL_Window* window, const size_t frame_count, const char* path)
     pipeline_(device_, pipeline_layout_, render_pass_, Vertex::GetAttributeDescriptions(), Vertex::GetBindingDescriptions(), CompileShaders(device_)),
     frame_count_(frame_count),
     current_frame_(0),
-    framebuffer_resized_(false),
     window_(window) {}
 
 Api::~Api() {
@@ -128,7 +127,7 @@ Api::~Api() {
 }
 
 void Api::OnResize([[maybe_unused]]const int width, [[maybe_unused]]const int height) {
-  framebuffer_resized_ = true;
+  RecreateSwapchain(width, height);
 }
 
 void Api::RenderFrame() {
@@ -138,6 +137,15 @@ void Api::RenderFrame() {
   VkSemaphore acquire_semaphore = acquire_semaphores_[current_frame_];
   VkCommandBuffer cmd_buffer = command_buffers_[current_frame_];
 
+  const auto recreate_swapchain = [this]{
+    int width, height;
+    SDL_GetWindowSizeInPixels(window_,
+      &width,
+      &height
+    );
+    RecreateSwapchain(width, height);
+  };
+
   if (const VkResult result = vkWaitForFences(device_, 1, &fence, VK_TRUE, std::numeric_limits<uint64_t>::max()); result != VK_SUCCESS) {
     throw Error("failed to wait for fences").WithCode(result);
   }
@@ -146,7 +154,7 @@ void Api::RenderFrame() {
   }
   if (const VkResult result = vkAcquireNextImageKHR(device_, swapchain_, std::numeric_limits<uint64_t>::max(), acquire_semaphore, VK_NULL_HANDLE, &image_idx); result != VK_SUCCESS) {
     if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
-      RecreateSwapchain();
+      recreate_swapchain();
       return;
     }
     throw Error("failed to acquire next image").WithCode(result);
@@ -182,9 +190,8 @@ void Api::RenderFrame() {
     .pImageIndices = &image_idx
   };
   if (const VkResult result = vkQueuePresentKHR(device_.queues().present, &present_info);
-      result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || framebuffer_resized_) {
-    framebuffer_resized_ = false;
-    RecreateSwapchain();
+      result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
+    recreate_swapchain();
   } else if (result != VK_SUCCESS) {
     throw Error("failed to queue present").WithCode(result);
   }
@@ -272,18 +279,15 @@ render::Object* Api::LoadObject(
   return objects_.data() + objects_.size() - 1;
 }
 
-void Api::RecreateSwapchain() {
-  int width, height;
-  SDL_GetWindowSize(window_, &width, &height);
-  while (width == 0 || height == 0) {
-    SDL_GetWindowSize(window_, &width, &height);
-    while (SDL_WaitEvent(nullptr))
-      ;
-  }
+void Api::RecreateSwapchain(const int width, const int height) {
   if (const VkResult result = vkDeviceWaitIdle(device_); result != VK_SUCCESS) {
     throw Error("failed to idle device");
   }
-  swapchain_ = CreateSwapchain(device_, surface_, window_, swapchain_);
+  const VkExtent2D extent = {
+    .width = static_cast<uint32_t>(width),
+    .height = static_cast<uint32_t>(height),
+  };
+  swapchain_ = Swapchain(device_, surface_, extent, swapchain_);
   depth_image_ = CreateDepthImage(device_, swapchain_);
   image_presents_ = CreateSwapchainImagePresents(device_, swapchain_, render_pass_, depth_image_.view());
   

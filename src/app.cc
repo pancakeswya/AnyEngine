@@ -51,7 +51,7 @@ render::Object* LoadObject(const std::string& filename,
 } // namespace
 
 App::App()
-    : api_plugin_("libvk_api"),
+    : api_plugin_("libgl_api"),
       window_(CreateWindow(api_plugin_.GetWindowFlags())),
       object_parser_plugin_("libobj_parser") {}
 
@@ -69,7 +69,7 @@ SDL_AppResult App::HandleEvent(const SDL_Event* event) const {
   switch (event->type) {
     case SDL_EVENT_QUIT:
       return SDL_APP_SUCCESS;
-    case SDL_EVENT_WINDOW_RESIZED:
+    case SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED:
       api_handle_->OnResize(event->window.data1, event->window.data2);
       break;
     default:

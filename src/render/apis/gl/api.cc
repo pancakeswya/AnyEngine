@@ -25,7 +25,6 @@ Api::Api(SDL_Window* window)
     window_(window) {}
 
 void Api::OnResize(int width, int height) {
-  SDL_GetWindowSizeInPixels(window_, &width, &height);
   GL_CHECK(glViewport(0, 0, width, height));
 }
 

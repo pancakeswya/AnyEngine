@@ -35,7 +35,7 @@ private:
   template<VkBufferUsageFlagBits usage>
   [[nodiscard]] StagingBuffer TransferBufferToStaging(const TransferBuffer& transfer_buffer) const;
 
-  void RecreateSwapchain();
+  void RecreateSwapchain(int width, int height);
   void RecordCommandBuffer(VkCommandBuffer cmd_buffer, size_t image_idx) const;
 
   Instance instance_;
@@ -65,7 +65,6 @@ private:
 
   size_t frame_count_;
   size_t current_frame_;
-  bool framebuffer_resized_;
   SDL_Window* window_;
 };
 
