@@ -9,7 +9,6 @@ namespace io {
 
 extern std::filesystem::path BasePath();
 extern std::vector<char> ReadFile(const std::string& path);
-extern bool PathExists(const std::string& path);
 
 } // namespace io
 

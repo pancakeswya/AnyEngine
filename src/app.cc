@@ -2,10 +2,13 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/hash.hpp>
+#include <SDL3/SDL_log.h>
 
 #include "io/file.h"
 #include "render/mappers/sdl/texture_mapper.h"
 #include "render/mappers/mock/texture_mapper.h"
+
+#include <filesystem>
 
 namespace {
 
@@ -34,10 +37,12 @@ render::Object* LoadObject(const std::string& filename,
   std::vector<std::unique_ptr<render::TextureMapper>> texture_mappers;
   texture_mappers.reserve(texture_paths.size());
   for (const std::string& texture_path : texture_paths) {
-    if (!io::PathExists(texture_path)) {
+    try {
+      std::filesystem::path texture_filepath(texture_path);
+      texture_mappers.emplace_back(std::make_unique<sdl::TextureMapper>(texture_filepath.lexically_normal().string()));
+    } catch (const std::exception& exception) {
+      SDL_Log("Failed to load texture mapper: %s\n", exception.what());
       texture_mappers.emplace_back(std::make_unique<mock::TextureMapper>());
-    } else {
-      texture_mappers.emplace_back(std::make_unique<sdl::TextureMapper>(texture_path));
     }
   }
   return api_handle->LoadObject(geometry_transferer, texture_mappers);
