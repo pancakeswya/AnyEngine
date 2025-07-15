@@ -37,6 +37,7 @@ endif()
 
 add_subdirectory(base)
 add_subdirectory(io)
+add_subdirectory(gui)
 add_subdirectory(render)
 add_subdirectory(resource)
 
@@ -58,8 +59,10 @@ endif()
 target_link_libraries(${EXECUTABLE_NAME} PUBLIC SDL3::SDL3 SDL3_mixer::SDL3_mixer)
 target_compile_definitions(${EXECUTABLE_NAME} PUBLIC SDL_MAIN_USE_CALLBACKS)
 
-target_link_libraries(${EXECUTABLE_NAME} PUBLIC texture_transferer_sdl texture_transferer_mock io render resource glm)
+target_link_libraries(${EXECUTABLE_NAME} PUBLIC glm)
 target_compile_definitions(${EXECUTABLE_NAME} PUBLIC GLM_FORCE_RADIANS GLM_FORCE_DEPTH_ZERO_TO_ONE GLM_ENABLE_EXPERIMENTAL)
+
+target_link_libraries(${EXECUTABLE_NAME} PUBLIC texture_transferer_sdl texture_transferer_mock io render resource)
 
 if(EMSCRIPTEN)
     target_link_libraries(${PROJECT_NAME} PRIVATE "--preload-file \"${CMAKE_SOURCE_DIR}/resources/obj/@obj\"")

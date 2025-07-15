@@ -11,6 +11,7 @@
 #include "render/apis/vk/sync.h"
 #include "render/apis/vk/command.h"
 #include "render/apis/vk/object.h"
+#include "render/apis/vk/gui.h"
 
 #include <SDL3/SDL.h>
 #include <vulkan/vulkan.h>
@@ -66,6 +67,8 @@ private:
   size_t frame_count_;
   size_t current_frame_;
   SDL_Window* window_;
+
+  GuiRenderer gui_render_;
 };
 
 } // namespace vk

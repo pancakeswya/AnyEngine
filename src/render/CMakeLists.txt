@@ -15,9 +15,9 @@ target_sources(render PUBLIC
         fps_counter.h
 )
 
-target_link_libraries(render INTERFACE glm)
-target_compile_definitions(render INTERFACE GLM_FORCE_RADIANS GLM_FORCE_DEPTH_ZERO_TO_ONE GLM_ENABLE_EXPERIMENTAL)
-
 add_subdirectory(apis)
 add_subdirectory(parsers)
 add_subdirectory(mappers)
+
+target_link_libraries(render INTERFACE glm)
+target_compile_definitions(render INTERFACE GLM_FORCE_RADIANS GLM_FORCE_DEPTH_ZERO_TO_ONE GLM_ENABLE_EXPERIMENTAL)

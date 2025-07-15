@@ -20,7 +20,7 @@ public:
     const Device& device,
     const Surface& surface,
     VkExtent2D extent,
-    VkSwapchainKHR old_swapchain
+    VkSwapchainKHR old_swapchain = VK_NULL_HANDLE
   );
 
   [[nodiscard]] std::vector<VkImage> images() const;
@@ -28,8 +28,13 @@ public:
   [[nodiscard]] const ImageInfo& image_info() const noexcept {
     return image_info_;
   }
+
+  [[nodiscard]] uint32_t min_image_count() const noexcept {
+    return min_image_count_;
+  }
 private:
   ImageInfo image_info_;
+  uint32_t min_image_count_;
 };
 
 class SwapchainImagePresent {

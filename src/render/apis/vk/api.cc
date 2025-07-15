@@ -58,13 +58,13 @@ inline Device SelectDevice(const std::vector<VkPhysicalDevice>& physical_devices
   return Device::Select(physical_devices, requirements);
 }
 
-inline Swapchain CreateSwapchain(const Device& device, const Surface& surface, SDL_Window* window, VkSwapchainKHR old_swapchain = VK_NULL_HANDLE) {
+inline Swapchain CreateSwapchain(const Device& device, const Surface& surface, SDL_Window* window) {
   VkExtent2D size;
   SDL_GetWindowSize(window,
     reinterpret_cast<int*>(&size.width),
     reinterpret_cast<int*>(&size.height)
   );
-  return {device, surface, size, old_swapchain};
+  return {device, surface, size};
 }
 
 inline Image CreateDepthImage(const Device& device, const Swapchain& swapchain) {
@@ -96,6 +96,35 @@ VkFormat MapFormat(const SDL_PixelFormat format) noexcept {
     return VK_FORMAT_UNDEFINED;
 }
 
+GuiRenderer CreateGuiRender(
+  SDL_Window* window,
+  VkInstance instance,
+  const Device& device,
+  VkRenderPass render_pass,
+  const uint32_t min_image_count,
+  const uint32_t image_count
+) {
+  ImGui_ImplVulkan_InitInfo init_info = {
+    .ApiVersion = VK_API_VERSION_1_0,
+    .Instance = instance,
+    .PhysicalDevice = device.physical_device(),
+    .Device = device,
+    .QueueFamily = device.queues().graphics.family_index(),
+    .Queue = device.queues().graphics,
+    .DescriptorPoolSize = 10,
+    .RenderPass = render_pass,
+    .MinImageCount = min_image_count,
+    .ImageCount = image_count,
+    .MSAASamples = VK_SAMPLE_COUNT_1_BIT,
+    .CheckVkResultFn =[](const VkResult result) {
+      if (result != VK_SUCCESS) {
+        throw Error("vk::VkResult = " + std::to_string(result));
+      }
+    }
+  };
+  return {window, &init_info};
+}
+
 } // namespace
 
 Api::Api(SDL_Window* window, const size_t frame_count, const char* path)
@@ -120,7 +149,16 @@ Api::Api(SDL_Window* window, const size_t frame_count, const char* path)
     pipeline_(device_, pipeline_layout_, render_pass_, Vertex::GetAttributeDescriptions(), Vertex::GetBindingDescriptions(), CompileShaders(device_)),
     frame_count_(frame_count),
     current_frame_(0),
-    window_(window) {}
+    window_(window),
+    gui_render_(CreateGuiRender(
+      window,
+      instance_,
+      device_,
+      render_pass_,
+      swapchain_.min_image_count(),
+      image_presents_.size()
+    ))
+{}
 
 Api::~Api() {
   vkDeviceWaitIdle(device_);
@@ -131,6 +169,8 @@ void Api::OnResize([[maybe_unused]]const int width, [[maybe_unused]]const int he
 }
 
 void Api::RenderFrame() {
+  gui_render_.RenderFrame();
+
   uint32_t image_idx;
 
   VkFence fence = fences_[current_frame_];
@@ -359,6 +399,7 @@ void Api::RecordCommandBuffer(VkCommandBuffer cmd_buffer, const size_t image_idx
       prev_offset = offset;
     }
   }
+  GuiRenderer::Record(cmd_buffer);
   vkCmdEndRenderPass(cmd_buffer);
   if (const VkResult result = vkEndCommandBuffer(cmd_buffer); result != VK_SUCCESS) {
     throw Error("failed to record command buffer").WithCode(result);

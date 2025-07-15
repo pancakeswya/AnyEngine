@@ -44,6 +44,7 @@ VkSwapchainKHR CreateSwapchain(
   VkSurfaceKHR surface,
   const VkExtent2D size,
   ImageInfo& info,
+  uint32_t& min_image_count,
   VkSwapchainKHR old_swapchain
 ) {
   const auto [capabilities, formats, present_modes] = device.physical_device().GetSurfaceSupport(surface);
@@ -92,6 +93,7 @@ VkSwapchainKHR CreateSwapchain(
   }
   info.extent = extent;
   info.format = format;
+  min_image_count = create_info.minImageCount;
 
   return swapchain;
 }
@@ -103,7 +105,7 @@ Swapchain::Swapchain(
   const Surface& surface,
   const VkExtent2D extent,
   VkSwapchainKHR old_swapchain
-) : NonDispatchableHandle(CreateSwapchain(device,surface, extent, image_info_, old_swapchain), device) {}
+) : NonDispatchableHandle(CreateSwapchain(device,surface, extent, image_info_, min_image_count_, old_swapchain), device) {}
 
 std::vector<VkImage> Swapchain::images() const {
   uint32_t image_count;
