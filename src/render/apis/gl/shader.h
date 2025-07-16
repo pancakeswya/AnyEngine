@@ -23,7 +23,7 @@ struct Shader : RUNTIME_HANDLE(GLuint, glDeleteShader) {
 struct ShaderProgram : RUNTIME_HANDLE(GLuint, glDeleteProgram) {
   DECLARE_DEFAULT_NO_COPY_CLASS(ShaderProgram);
 
-  explicit ShaderProgram(std::vector<ShaderInfo>&& infos);
+  explicit ShaderProgram(const char* glsl_version, std::vector<ShaderInfo>&& infos);
 };
 
 } // namespace gl

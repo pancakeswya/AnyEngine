@@ -26,5 +26,6 @@ target_sources(gui PRIVATE
         renderer.cc
 )
 
+set_target_properties(gui PROPERTIES GUI_IMGUI_DIR ${imgui_SOURCE_DIR})
 target_include_directories(gui PUBLIC ${imgui_SOURCE_DIR})
 target_link_libraries(gui PUBLIC imgui)

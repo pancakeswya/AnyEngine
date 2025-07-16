@@ -13,12 +13,15 @@
 
 namespace {
 
-SDL_Window* CreateWindow(const std::string_view title, const SDL_WindowFlags window_flags) {
-  const float main_scale = SDL_GetDisplayContentScale(SDL_GetPrimaryDisplay());
+inline float GetScaleFactor() {
+  return SDL_GetDisplayContentScale(SDL_GetPrimaryDisplay());
+}
+
+SDL_Window* CreateWindow(const std::string_view title, const float scale_factor, const SDL_WindowFlags window_flags) {
   SDL_Window* window = SDL_CreateWindow(
     title.data(),
-    static_cast<int>(1280 * main_scale),
-    static_cast<int>(720 * main_scale),
+    static_cast<int>(1280 * scale_factor),
+    static_cast<int>(720 * scale_factor),
     SDL_WINDOW_RESIZABLE |
     SDL_WINDOW_HIGH_PIXEL_DENSITY |
     window_flags
@@ -56,12 +59,13 @@ render::Object* LoadObject(const std::string& filename,
 } // namespace
 
 App::App()
-    : api_plugin_("libvk_api"),
-      window_(CreateWindow(kTitle, api_plugin_.GetWindowFlags())),
+    : scale_factor_(GetScaleFactor()),
+      api_plugin_("libgl_api"),
+      window_(CreateWindow(kTitle, scale_factor_, api_plugin_.GetWindowFlags())),
       object_parser_plugin_("libobj_parser") {}
 
 void App::Init() {
-  api_handle_ = api_plugin_.CreateHandle(window_);
+  api_handle_ = api_plugin_.CreateHandle(window_, scale_factor_);
   object_parser_handle_ = object_parser_plugin_.CreateHandle();
   object_ = LoadObject(
     "obj/Madara Uchiha/obj/Madara_Uchiha.obj",
@@ -71,6 +75,7 @@ void App::Init() {
 }
 
 SDL_AppResult App::HandleEvent(const SDL_Event* event) const {
+  api_handle_->GetGuiRenderer()->ProcessEvent(event);
   switch (event->type) {
     case SDL_EVENT_QUIT:
       return SDL_APP_SUCCESS;

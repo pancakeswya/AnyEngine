@@ -5,8 +5,7 @@ set(VK_VERSION "1.3.250")
 set(VK_SDK_TAG "sdk-${VK_VERSION}")
 
 configure_shaders(shaders shaders.in.cc shaders.cc)
-
-get_target_property(GUI_INCLUDES gui INCLUDE_DIRECTORIES)
+get_target_property(IMGUI_DIR gui GUI_IMGUI_DIR)
 make_plugin(vk_api
         descriptor.h
         descriptor.cc
@@ -44,8 +43,8 @@ make_plugin(vk_api
         shaders.cc
         gui.h
         gui.cc
-        ${GUI_INCLUDES}/backends/imgui_impl_vulkan.cpp
-        ${GUI_INCLUDES}/backends/imgui_impl_sdl3.cpp
+        ${IMGUI_DIR}/backends/imgui_impl_vulkan.cpp
+        ${IMGUI_DIR}/backends/imgui_impl_sdl3.cpp
         api_plugin.cc
         api.h
         api.cc
@@ -120,13 +119,12 @@ if (${CMAKE_BUILD_TYPE} STREQUAL "Debug" AND ANDROID)
     file(ARCHIVE_EXTRACT INPUT ${CMAKE_BINARY_DIR}/${VVL_NAME} DESTINATION ${MOBILE_LIBS_DIR})
 endif()
 
-target_include_directories(vk_api PUBLIC ${imgui_SOURCE_DIR})
+target_include_directories(vk_api PUBLIC ${IMGUI_DIR})
 target_link_libraries(vk_api PUBLIC
         shaderc_shared
         SDL3::SDL3
         Vulkan::Vulkan
         render
-        gui
 )
 
 if (APPLE)

@@ -23,15 +23,20 @@ namespace vk {
 
 class Api final : public render::Api {
 public:
-  explicit Api(SDL_Window* window, size_t frame_count = 2, const char* path = nullptr);
+  explicit Api(SDL_Window* window, float scale_factor, size_t frame_count = 2, const char* path = nullptr);
   ~Api() override;
 
   void OnResize(int width, int height) override;
 
   void RenderFrame() override;
+
   render::Object* LoadObject(
       render::GeometryTransferer& geometry_transferer,
       std::vector<std::unique_ptr<render::TextureMapper>>& texture_mappers) override;
+
+  render::GuiRenderer* GetGuiRenderer() noexcept override {
+    return &gui_render_;
+  }
 private:
   template<VkBufferUsageFlagBits usage>
   [[nodiscard]] StagingBuffer TransferBufferToStaging(const TransferBuffer& transfer_buffer) const;

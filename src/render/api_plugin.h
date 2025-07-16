@@ -9,7 +9,7 @@
 extern "C" {
 
 extern PLUGIN_API SDL_WindowFlags PluginRenderApiGetWindowFlags();
-extern PLUGIN_API render::Api* PluginRenderApiCreate(SDL_Window* window);
+extern PLUGIN_API render::Api* PluginRenderApiCreate(SDL_Window* window, float scale_factor);
 extern PLUGIN_API void PluginRenderApiDestroy(render::Api* api);
 
 } // extern "C"

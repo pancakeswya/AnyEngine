@@ -13,11 +13,13 @@ target_sources(render PUBLIC
         texture.h
         texture_transferer.h
         fps_counter.h
+        gui.h
 )
 
 add_subdirectory(apis)
 add_subdirectory(parsers)
 add_subdirectory(mappers)
 
-target_link_libraries(render INTERFACE glm)
+target_include_directories(render PUBLIC ${imgui_SOURCE_DIR})
+target_link_libraries(render INTERFACE glm gui)
 target_compile_definitions(render INTERFACE GLM_FORCE_RADIANS GLM_FORCE_DEPTH_ZERO_TO_ONE GLM_ENABLE_EXPERIMENTAL)

@@ -31,6 +31,8 @@ public:
 private:
   void UpdateFps();
 
+  float scale_factor_;
+
   render::ApiPlugin api_plugin_;
   SDL_Window* window_;
 

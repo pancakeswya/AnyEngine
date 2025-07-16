@@ -1,7 +1,7 @@
 #ifndef RENDER_APIS_VK_GUI_H_
 #define RENDER_APIS_VK_GUI_H_
 
-#include "gui/renderer.h"
+#include "render/gui.h"
 
 #include <backends/imgui_impl_vulkan.h>
 #include <vulkan/vulkan.h>
@@ -9,11 +9,14 @@
 
 namespace vk {
 
-struct GuiRenderer final : gui::Renderer {
-  GuiRenderer(SDL_Window* window, ImGui_ImplVulkan_InitInfo* info);
+struct GuiRenderer final : render::GuiRenderer {
+  GuiRenderer(SDL_Window* window, float scale_factor, ImGui_ImplVulkan_InitInfo* info);
+
   ~GuiRenderer() override;
 
   void RenderFrame() const override;
+
+  void ProcessEvent(const SDL_Event* event) const override;
 
   static void Record(VkCommandBuffer command_buffer);
 };

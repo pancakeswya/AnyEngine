@@ -6,7 +6,8 @@
 
 namespace vk {
 
-GuiRenderer::GuiRenderer(SDL_Window* window, ImGui_ImplVulkan_InitInfo* info) : Renderer(SDL_GetDisplayContentScale(SDL_GetPrimaryDisplay())) {
+GuiRenderer::GuiRenderer(SDL_Window* window, const float scale_factor,  ImGui_ImplVulkan_InitInfo* info)
+  : render::GuiRenderer(scale_factor) {
   if (!ImGui_ImplSDL3_InitForVulkan(window)) {
     throw Error("Failed to initialize imgui SDL for vulkan");
   }
@@ -17,18 +18,21 @@ GuiRenderer::GuiRenderer(SDL_Window* window, ImGui_ImplVulkan_InitInfo* info) : 
 
 GuiRenderer::~GuiRenderer() {
   ImGui_ImplVulkan_Shutdown();
-  ImGui_ImplSDL3_Shutdown();
 }
 
 void GuiRenderer::Record(VkCommandBuffer command_buffer) {
-  ImDrawData* draw_data = ImGui::GetDrawData();
-  ImGui_ImplVulkan_RenderDrawData(draw_data, command_buffer);
+  if (ImDrawData* draw_data = ImGui::GetDrawData(); draw_data != nullptr) {
+    ImGui_ImplVulkan_RenderDrawData(draw_data, command_buffer);
+  }
 }
 
 void GuiRenderer::RenderFrame() const {
   ImGui_ImplVulkan_NewFrame();
-  ImGui_ImplSDL3_NewFrame();
-  gui::Renderer::RenderFrame();
+  render::GuiRenderer::RenderFrame();
+}
+
+void GuiRenderer::ProcessEvent(const SDL_Event* event) const {
+  render::GuiRenderer::ProcessEvent(event);
 }
 
 } // namespace vk

@@ -7,6 +7,12 @@ namespace gl {
 
 namespace {
 
+#ifdef RENDER_OPENGL_ES3
+constexpr auto kGlSlVersion = "#version 300 es\n";
+#else
+constexpr auto kGlSlVersion = "#version 150\n";
+#endif
+
 GLenum MapFormat(const SDL_PixelFormat format) noexcept {
   switch (format) {
     case SDL_PIXELFORMAT_RGBA32:
@@ -19,21 +25,24 @@ GLenum MapFormat(const SDL_PixelFormat format) noexcept {
 
 } // namespace
 
-Api::Api(SDL_Window* window)
+Api::Api(SDL_Window* window, const float scale_factor)
   : context_(window),
-    program_(GetShaderInfos()),
-    window_(window) {}
+    program_(kGlSlVersion, GetShaderInfos()),
+    window_(window),
+    gui_renderer_(window, context_, kGlSlVersion, scale_factor)
+{}
 
 void Api::OnResize(int width, int height) {
   GL_CHECK(glViewport(0, 0, width, height));
 }
 
 void Api::RenderFrame() {
+  gui_renderer_.RenderFrame();
+
   glClearColor(0, 0, 0, 1);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   size_t prev_offset = 0;
-
   for(const Object& object : objects_) {
     for(const auto[index, offset] : object.texture_indices()) {
       object.textures().at(index).Bind();
@@ -41,7 +50,7 @@ void Api::RenderFrame() {
       prev_offset = offset;
     }
   }
-  glFinish();
+  GuiRenderer::Draw();
   SDL_GL_SwapWindow(window_);
 }
 

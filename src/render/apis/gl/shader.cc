@@ -29,18 +29,14 @@ Shader::Shader(const ShaderInfo& info) : Handle(glCreateShader(info.type), glDel
   }
 }
 
-ShaderProgram::ShaderProgram(std::vector<ShaderInfo>&& infos) : Handle(glCreateProgram(), glDeleteProgram) {
+ShaderProgram::ShaderProgram(const char* glsl_version, std::vector<ShaderInfo>&& infos) : Handle(glCreateProgram(), glDeleteProgram) {
   glEnable(GL_DEPTH_TEST);
   glActiveTexture(GL_TEXTURE0);
 
   std::vector<Shader> shaders;
   shaders.reserve(infos.size());
   for(ShaderInfo& info : infos) {
-#ifdef RENDER_OPENGL_ES3
-    info.code = "#version 300 es\n" + info.code;
-#else
-    info.code = "#version 150\n" + info.code;
-#endif
+    info.code = glsl_version + info.code;
     shaders.emplace_back(info);
   }
   for(const Shader& shader : shaders) {

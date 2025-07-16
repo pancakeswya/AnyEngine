@@ -4,6 +4,7 @@
 #include "render/object.h"
 #include "render/geometry_transferer.h"
 #include "render/texture_transferer.h"
+#include "render/gui.h"
 
 #include <memory>
 #include <vector>
@@ -19,6 +20,8 @@ struct Api {
       std::vector<std::unique_ptr<TextureMapper>>& texture_mappers
   ) = 0;
   virtual void OnResize(int width, int height) = 0;
+
+  virtual GuiRenderer* GetGuiRenderer() noexcept = 0;
 };
 
 } // namespace render

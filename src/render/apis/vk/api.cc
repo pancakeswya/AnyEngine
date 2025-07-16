@@ -102,7 +102,8 @@ GuiRenderer CreateGuiRender(
   const Device& device,
   VkRenderPass render_pass,
   const uint32_t min_image_count,
-  const uint32_t image_count
+  const uint32_t image_count,
+  const float scale_factor
 ) {
   ImGui_ImplVulkan_InitInfo init_info = {
     .ApiVersion = VK_API_VERSION_1_0,
@@ -122,12 +123,12 @@ GuiRenderer CreateGuiRender(
       }
     }
   };
-  return {window, &init_info};
+  return {window, scale_factor, &init_info};
 }
 
 } // namespace
 
-Api::Api(SDL_Window* window, const size_t frame_count, const char* path)
+Api::Api(SDL_Window* window, const float scale_factor, const size_t frame_count, const char* path)
   : instance_(path),
 #ifndef NDEBUG
     debug_messenger_(instance_),
@@ -156,7 +157,8 @@ Api::Api(SDL_Window* window, const size_t frame_count, const char* path)
       device_,
       render_pass_,
       swapchain_.min_image_count(),
-      image_presents_.size()
+      image_presents_.size(),
+      scale_factor
     ))
 {}
 

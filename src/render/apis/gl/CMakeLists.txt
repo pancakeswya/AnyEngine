@@ -4,6 +4,7 @@ include(${CMAKE_SOURCE_DIR}/cmake/shaders.cmake)
 
 configure_shaders(shaders shaders.in.cc shaders.cc)
 
+get_target_property(IMGUI_DIR gui GUI_IMGUI_DIR)
 make_plugin(gl_api
         api.h
         api.cc
@@ -24,6 +25,10 @@ make_plugin(gl_api
         shader.cc
         shaders.h
         shaders.cc
+        ${IMGUI_DIR}/backends/imgui_impl_opengl3.cpp
+        ${IMGUI_DIR}/backends/imgui_impl_sdl3.cpp
+        gui.h
+        gui.cc
 )
 
 if (ANDROID OR EMSCRIPTEN)
@@ -55,5 +60,6 @@ if (NOT TARGET glad)
     glad_add_library(glad STATIC API ${GLAD_GL_ARG} LOCATION ${CMAKE_BINARY_DIR}/glad-build/${TARGET})
 endif()
 
+target_include_directories(gl_api PUBLIC ${IMGUI_DIR})
 target_compile_definitions(gl_api PUBLIC USE_VAO)
 target_link_libraries(gl_api PUBLIC SDL3::SDL3 glad render)

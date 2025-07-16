@@ -23,8 +23,8 @@ public:
     return api_get_window_flags_();
   }
 
-  [[nodiscard]] ApiHandle CreateHandle(SDL_Window* window) const {
-    return {api_create_(window), api_destroy_};
+  [[nodiscard]] ApiHandle CreateHandle(SDL_Window* window, const float scale_factor) const {
+    return {api_create_(window, scale_factor), api_destroy_};
   }
 private:
   DECLARE_SYM(PluginRenderApiCreate) api_create_ = nullptr;
