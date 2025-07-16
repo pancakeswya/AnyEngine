@@ -1,15 +1,18 @@
 #ifndef BASE_PLUGIN_H_
 #define BASE_PLUGIN_H_
 
+#ifndef __EMSCRIPTEN__
 #include <SDL3/SDL_loadso.h>
 
 #include "base/error.h"
 
 #include <utility>
+#endif
 #include <memory>
 #include <string>
 #include <functional>
 
+#ifndef __EMSCRIPTEN__
 #ifdef _WIN32
 #   define DLL_EXT ".dll"
 #else
@@ -18,6 +21,7 @@
 #   else
 #       define DLL_EXT ".so"
 #   endif
+#endif
 #endif
 
 #define DECLARE_SYM(sym) decltype(&sym)
@@ -47,21 +51,35 @@ public:
   Plugin(const Plugin& other) = delete;
 
   Plugin(Plugin&& other) noexcept
+#ifdef __EMSCRIPTEN__
+  = default;
+#else
     : shared_object_(std::exchange(other.shared_object_, nullptr)) {}
+#endif
 
-  virtual ~Plugin() {
+  virtual ~Plugin()
+#ifdef __EMSCRIPTEN__
+  = default;
+#else
+  {
     if (shared_object_ != nullptr) {
       SDL_UnloadObject(shared_object_);
       shared_object_ = nullptr;
     }
   }
+#endif
 
-  Plugin& operator=(Plugin&& other) noexcept {
+  Plugin& operator=(Plugin&& other) noexcept
+#ifdef __EMSCRIPTEN__
+  = default;
+#else
+  {
     if (this != &other) {
       shared_object_ = std::exchange(other.shared_object_, nullptr);
     }
     return *this;
   }
+#endif
 
   Plugin& operator=(const Plugin& other) = delete;
 #ifndef __EMSCRIPTEN__
@@ -73,13 +91,15 @@ public:
     }
     return reinterpret_cast<T>(proc);
   }
-#endif
 protected:
   SDL_SharedObject* shared_object_ = nullptr;
+#endif
 };
 
 } // namespace base
 
+#ifdef DLL_EXT
 #undef DLL_EXT
+#endif
 
 #endif // BASE_PLUGIN_H_
