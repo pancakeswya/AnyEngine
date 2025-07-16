@@ -9,7 +9,7 @@
 #include "render/mappers/mock/texture_mapper.h"
 
 #include <filesystem>
-#include <sstream>
+#include <stdexcept>
 
 namespace {
 
@@ -60,7 +60,7 @@ render::Object* LoadObject(const std::string& filename,
 
 App::App()
     : scale_factor_(GetScaleFactor()),
-      api_plugin_("libgl_api"),
+      api_plugin_("libvk_api"),
       window_(CreateWindow(kTitle, scale_factor_, api_plugin_.GetWindowFlags())),
       object_parser_plugin_("libobj_parser") {}
 
@@ -89,7 +89,6 @@ SDL_AppResult App::HandleEvent(const SDL_Event* event) const {
 }
 
 SDL_AppResult App::Iterate() {
-  UpdateFps();
   api_handle_->RenderFrame();
 
   static auto start_time = std::chrono::high_resolution_clock::now();
@@ -108,15 +107,6 @@ SDL_AppResult App::Iterate() {
   object_->UpdateUniforms();
 
   return SDL_APP_CONTINUE;
-}
-
-void App::UpdateFps() {
-  const double fps = fps_counter_.Count();
-
-  std::stringstream oss;
-  oss.precision(1);
-  oss << kTitle << " (" << std::fixed << fps << " FPS)";
-  SDL_SetWindowTitle(window_, oss.str().c_str());
 }
 
 

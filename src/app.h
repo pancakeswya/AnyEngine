@@ -5,7 +5,6 @@
 #include "render/api_plugin_import.h"
 #include "render/object.h"
 #include "render/object_parser_plugin_import.h"
-#include "render/fps_counter.h"
 
 #include <SDL3/SDL.h>
 
@@ -29,8 +28,6 @@ public:
   [[nodiscard]] SDL_AppResult HandleEvent(const SDL_Event* event) const;
   [[nodiscard]] SDL_AppResult Iterate();
 private:
-  void UpdateFps();
-
   float scale_factor_;
 
   render::ApiPlugin api_plugin_;
@@ -42,7 +39,6 @@ private:
   render::ObjectParserHandle object_parser_handle_;
 
   render::Object* object_ = nullptr;
-  render::FpsCounter fps_counter_;
 };
 
 #endif // APP_H_

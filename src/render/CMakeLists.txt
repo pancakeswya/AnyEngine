@@ -12,7 +12,6 @@ target_sources(render PUBLIC
         object_parser_plugin_import.h
         texture.h
         texture_transferer.h
-        fps_counter.h
         gui.h
 )
 

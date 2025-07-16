@@ -14,7 +14,7 @@ struct GuiRenderer final : render::GuiRenderer {
 
   ~GuiRenderer() override;
 
-  void RenderFrame() const override;
+  void RenderFrame() override;
 
   void ProcessEvent(const SDL_Event* event) const override;
 

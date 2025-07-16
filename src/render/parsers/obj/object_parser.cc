@@ -4,6 +4,7 @@
 #include <cmath>
 #include <cstring>
 #include <filesystem>
+#include <stdexcept>
 #include <glm/glm.hpp>
 
 #include <SDL3/SDL.h>

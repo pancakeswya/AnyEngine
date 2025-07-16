@@ -26,7 +26,7 @@ void GuiRenderer::Record(VkCommandBuffer command_buffer) {
   }
 }
 
-void GuiRenderer::RenderFrame() const {
+void GuiRenderer::RenderFrame() {
   ImGui_ImplVulkan_NewFrame();
   render::GuiRenderer::RenderFrame();
 }

@@ -14,7 +14,7 @@ struct GuiRenderer : gui::Renderer {
     ImGui_ImplSDL3_Shutdown();
   }
 
-  void RenderFrame() const override {
+  void RenderFrame() override {
     ImGui_ImplSDL3_NewFrame();
     gui::Renderer::RenderFrame();
   }

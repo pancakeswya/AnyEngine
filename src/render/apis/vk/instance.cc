@@ -84,7 +84,7 @@ VkInstance CreateInstance(const char* path) {
     .applicationVersion = VK_MAKE_VERSION(1, 0, 0),
     .pEngineName = "Simple Engine",
     .engineVersion = VK_MAKE_VERSION(1, 0, 0),
-    .apiVersion = VK_API_VERSION_1_0
+    .apiVersion = Instance::kApiVersion
   };
 #ifndef NDEBUG
   if (!LayersAreSupported()) {

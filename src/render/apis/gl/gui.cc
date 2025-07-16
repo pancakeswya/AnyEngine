@@ -26,7 +26,7 @@ GuiRenderer::~GuiRenderer() {
   ImGui_ImplOpenGL3_Shutdown();
 }
 
-void GuiRenderer::RenderFrame() const {
+void GuiRenderer::RenderFrame() {
   ImGui_ImplOpenGL3_NewFrame();
   render::GuiRenderer::RenderFrame();
 }

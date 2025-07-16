@@ -17,6 +17,8 @@ struct DebugMessenger : NonDispatchableRuntimeHandle<VkDebugUtilsMessengerEXT, V
 #endif // NDEBUG
 
 struct Instance : Handle<VkInstance, vkDestroyInstance> {
+  static constexpr auto kApiVersion = VK_API_VERSION_1_0;
+
   static constexpr std::array
 #if defined(NDEBUG) && !defined(__APPLE__)
     <const char*, 0>

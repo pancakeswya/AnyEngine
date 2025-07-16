@@ -24,6 +24,8 @@ target_sources(gui PRIVATE
         error.h
         renderer.h
         renderer.cc
+        fps_counter.h
+        fps_counter.cc
 )
 
 set_target_properties(gui PROPERTIES GUI_IMGUI_DIR ${imgui_SOURCE_DIR})

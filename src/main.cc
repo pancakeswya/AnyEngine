@@ -9,7 +9,7 @@
 
 #define TRY_WITH_EXIT_ON_CATCH(EXPR)                                  \
   try { EXPR; }                                                       \
-  catch(const std::exception& e) {                                    \
+  catch (const std::exception& e) {                                    \
     SDL_Log("Caught exception, what(): %s", e.what());                \
     return SDL_APP_FAILURE;                                           \
   }

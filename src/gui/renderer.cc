@@ -2,6 +2,8 @@
 
 #include <imgui.h>
 
+#include <sstream>
+
 namespace gui {
 
 Renderer::Renderer(const float scale_factor) {
@@ -22,16 +24,15 @@ Renderer::~Renderer() {
   ImGui::DestroyContext();
 }
 
-void Renderer::RenderFrame() const {
+void Renderer::RenderFrame() {
   ImGui::NewFrame();
 
-  ImGui::Begin("Hello, world!");
+  ImGui::Begin("Gui");
 
-  ImGui::Text("This is some useful text.");
+  ImGui::Text("Fps %.2f", fps_counter_.Count());
   ImGui::End();
 
   ImGui::Render();
 }
-
 
 } // namespace gui

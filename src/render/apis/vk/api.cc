@@ -106,13 +106,13 @@ GuiRenderer CreateGuiRender(
   const float scale_factor
 ) {
   ImGui_ImplVulkan_InitInfo init_info = {
-    .ApiVersion = VK_API_VERSION_1_0,
+    .ApiVersion = Instance::kApiVersion,
     .Instance = instance,
     .PhysicalDevice = device.physical_device(),
     .Device = device,
     .QueueFamily = device.queues().graphics.family_index(),
     .Queue = device.queues().graphics,
-    .DescriptorPoolSize = 10,
+    .DescriptorPoolSize = IMGUI_IMPL_VULKAN_MINIMUM_IMAGE_SAMPLER_POOL_SIZE,
     .RenderPass = render_pass,
     .MinImageCount = min_image_count,
     .ImageCount = image_count,
