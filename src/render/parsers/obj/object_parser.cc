@@ -10,7 +10,8 @@
 #include <SDL3/SDL.h>
 #include <mapbox/earcut.hpp>
 
-#include "io/file.h"
+#include "fs/file.h"
+#include "fs/path.h"
 #include "resource/scope_exit.h"
 #include "render/parsers/obj/error.h"
 
@@ -320,7 +321,7 @@ inline const char* ParseMtl(const char* ptr, Data& data) {
   const std::string path_mtl = data.dir_path + GetName(&ptr);
   std::vector<char> buffer;
   try {
-    buffer = io::ReadFile(path_mtl);
+    buffer = fs::ReadFile(path_mtl);
   } catch (const std::exception& exception) {
     SDL_Log("Failed to read material file at path %s, error: %s", path_mtl.c_str(), exception.what());
     return ptr;
@@ -386,7 +387,7 @@ Data ParseFromFile(const std::string& path) {
   resource::scope_exit file_guard([file] {
     SDL_CloseIO(file);
   });
-  data.dir_path = (io::BasePath() / GetDirPath(path)).string();
+  data.dir_path = (fs::BasePath() / GetDirPath(path)).string();
 
   std::vector<char> buffer(2 * kBufferSize);
   char* buffer_ptr = buffer.data();

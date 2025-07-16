@@ -36,7 +36,7 @@ if (EMSCRIPTEN)
 endif()
 
 add_subdirectory(base)
-add_subdirectory(io)
+add_subdirectory(fs)
 add_subdirectory(gui)
 add_subdirectory(render)
 add_subdirectory(resource)

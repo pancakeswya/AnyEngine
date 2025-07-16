@@ -1,24 +1,11 @@
-#include "io/file.h"
+#include "fs/file.h"
 
-#include "io/error.h"
+#include "fs/error.h"
 #include "resource/scope_exit.h"
 
 #include <SDL3/SDL.h>
 
-namespace io {
-
-std::filesystem::path BasePath() {
-#if __ANDROID__
-  std::filesystem::path base_path = "";
-#else
-  const char* base_path_ptr = SDL_GetBasePath();
-  if (base_path_ptr == nullptr) {
-    throw Error("SDL_GetBasePath failed");
-  }
-  const std::filesystem::path base_path = base_path_ptr;
-#endif
-  return base_path;
-}
+namespace fs {
 
 std::vector<char> ReadFile(const std::string& path) {
   SDL_IOStream* file = SDL_IOFromFile(path.data(), "rb");
@@ -39,4 +26,4 @@ std::vector<char> ReadFile(const std::string& path) {
   return buffer;
 }
 
-} // namespace io
+} // namespace fs

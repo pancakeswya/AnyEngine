@@ -1,14 +1,14 @@
-#ifndef IO_ERROR_H_
-#define IO_ERROR_H_
+#ifndef FS_ERROR_H_
+#define FS_ERROR_H_
 
 #include "base/error.h"
 
-namespace io {
+namespace fs {
 
 struct Error final : base::Error {
   using base::Error::Error;
 };
 
-} // namespace io
+} // namespace fs
 
-#endif // IO_ERROR_H_
+#endif // FS_ERROR_H_

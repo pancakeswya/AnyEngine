@@ -4,7 +4,7 @@
 #include <glm/gtx/hash.hpp>
 #include <SDL3/SDL_log.h>
 
-#include "io/file.h"
+#include "fs/path.h"
 #include "render/mappers/sdl/texture_mapper.h"
 #include "render/mappers/mock/texture_mapper.h"
 
@@ -35,7 +35,7 @@ SDL_Window* CreateWindow(const std::string_view title, const float scale_factor,
 render::Object* LoadObject(const std::string& filename,
                            const render::ApiHandle& api_handle,
                            const render::ObjectParserHandle& object_parser_handle) {
-  const std::string path = (io::BasePath() / filename).string();
+  const std::string path = (fs::BasePath() / filename).string();
   std::vector<std::string> texture_paths;
   render::GeometryTransferer& geometry_transferer = object_parser_handle->Parse(path, texture_paths);
   std::vector<std::unique_ptr<render::TextureMapper>> texture_mappers;

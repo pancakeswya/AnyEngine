@@ -8,5 +8,7 @@ target_sources(io PUBLIC
         error.h
         file.cc
         file.h
+        path.h
+        path.cc
 )
 target_link_libraries(io PUBLIC SDL3::SDL3)
