@@ -6,7 +6,7 @@
 
 namespace vk {
 
-GuiRenderer::GuiRenderer(SDL_Window* window, const float scale_factor,  ImGui_ImplVulkan_InitInfo* info)
+GuiRenderer::GuiRenderer(SDL_Window* window, const float scale_factor, ImGui_ImplVulkan_InitInfo* info)
   : render::GuiRenderer(scale_factor) {
   if (!ImGui_ImplSDL3_InitForVulkan(window)) {
     throw Error("Failed to initialize imgui SDL for vulkan");

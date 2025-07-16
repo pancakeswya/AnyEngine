@@ -89,7 +89,7 @@ inline Image CreateDepthImage(const Device& device, const Swapchain& swapchain) 
 
 VkFormat MapFormat(const SDL_PixelFormat format) noexcept {
     switch (format) {
-      case SDL_PIXELFORMAT_RGBA32: return VK_FORMAT_R8G8B8A8_SRGB;
+      case SDL_PIXELFORMAT_RGBA32: return VK_FORMAT_R8G8B8A8_UNORM;
       default:
         break;
     }
