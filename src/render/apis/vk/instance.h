@@ -9,22 +9,22 @@
 
 namespace vk {
 
-#ifndef NDEBUG
+#ifndef ANY_RELEASE
 struct DebugMessenger : NonDispatchableRuntimeHandle<VkDebugUtilsMessengerEXT, VkInstance> {
   DECLARE_DEFAULT_NO_COPY_CLASS(DebugMessenger);
   explicit DebugMessenger(VkInstance instance);
 };
-#endif // NDEBUG
+#endif // ANY_RELEASE
 
 struct Instance : Handle<VkInstance, vkDestroyInstance> {
   static constexpr auto kApiVersion = VK_API_VERSION_1_0;
 
   static constexpr std::array
-#if defined(NDEBUG) && !defined(USE_PORTABILITY)
+#if defined(ANY_RELEASE) && !defined(USE_PORTABILITY)
     <const char*, 0>
 #endif
   kExtensions = {
-#ifndef NDEBUG
+#ifndef ANY_RELEASE
     VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
 #endif
 #ifdef USE_PORTABILITY
@@ -33,11 +33,11 @@ struct Instance : Handle<VkInstance, vkDestroyInstance> {
 #endif // USE_PORTABILITY
   };
   static constexpr std::array
-#if defined(NDEBUG)
+#if defined(ANY_RELEASE)
   <const char*, 0>
 #endif
   kLayers = {
-#ifndef NDEBUG
+#ifndef ANY_RELEASE
     "VK_LAYER_KHRONOS_validation"
 #endif
   };

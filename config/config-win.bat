@@ -1,3 +1,3 @@
 @echo OFF
 
-cmake -S .. -B ..\build\win
+cmake -S .. -DCMAKE_BUILD_TYPE=Release -B ..\build\win

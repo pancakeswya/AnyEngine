@@ -2,7 +2,7 @@
 
 #include "render/apis/vk/error.h"
 
-#ifndef NDEBUG
+#ifndef ANY_RELEASE
 #include <SDL3/SDL_log.h>
 #endif
 #include <SDL3/SDL_vulkan.h>
@@ -15,7 +15,7 @@ namespace vk {
 
 namespace {
 
-#ifndef NDEBUG
+#ifndef ANY_RELEASE
 VKAPI_ATTR VkBool32 VKAPI_CALL MessageCallback(
   [[maybe_unused]]VkDebugUtilsMessageSeverityFlagBitsEXT message_severity,
   [[maybe_unused]]VkDebugUtilsMessageTypeFlagsEXT message_type,
@@ -57,7 +57,7 @@ bool LayersAreSupported() {
   }
   return true;
 }
-#endif // NDEBUG
+#endif // ANY_RELEASE
 
 inline std::vector<const char*> GetInstanceExtensions() {
   std::vector extensions(
@@ -86,7 +86,7 @@ VkInstance CreateInstance(const char* path) {
     .engineVersion = VK_MAKE_VERSION(1, 0, 0),
     .apiVersion = Instance::kApiVersion
   };
-#ifndef NDEBUG
+#ifndef ANY_RELEASE
   if (!LayersAreSupported()) {
     throw Error("Instance layers are not supported");
   }
@@ -94,11 +94,11 @@ VkInstance CreateInstance(const char* path) {
   std::vector extensions = GetInstanceExtensions();
   const VkInstanceCreateInfo create_info = {
     .sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
-#ifndef NDEBUG
+#ifndef ANY_RELEASE
     .pNext = &kMessengerCreateInfo,
 #endif
     .pApplicationInfo = &app_info,
-#ifndef NDEBUG
+#ifndef ANY_RELEASE
     .enabledLayerCount = static_cast<uint32_t>(Instance::kLayers.size()),
     .ppEnabledLayerNames = Instance::kLayers.data(),
 #endif
@@ -115,7 +115,7 @@ VkInstance CreateInstance(const char* path) {
   return instance;
 }
 
-#ifndef NDEBUG
+#ifndef ANY_RELEASE
 #define vkGetInstanceProcAddrByType(instance, proc) reinterpret_cast<decltype(&(proc))>(vkGetInstanceProcAddr(instance, #proc))
 
 inline VkDebugUtilsMessengerEXT CreateMessenger(VkInstance instance) {
@@ -140,13 +140,13 @@ inline auto GetMessengerDestroyFunc(VkInstance instance) {
   }
   return destroy_messenger;
 }
-#endif // NDEBUG
+#endif // ANY_RELEASE
 
 } // namespace
 
-#ifndef NDEBUG
+#ifndef ANY_RELEASE
 DebugMessenger::DebugMessenger(VkInstance instance) : NonDispatchableRuntimeHandle(CreateMessenger(instance), instance, GetMessengerDestroyFunc(instance)) {}
-#endif // NDEBUG
+#endif // ANY_RELEASE
 
 Instance::Instance(const char* path) : Handle(CreateInstance(path)) {}
 

@@ -45,7 +45,7 @@ private:
   void RecordCommandBuffer(VkCommandBuffer cmd_buffer, size_t image_idx) const;
 
   Instance instance_;
-#ifndef NDEBUG
+#ifndef ANY_RELEASE
   DebugMessenger debug_messenger_;
 #endif
   Surface surface_;

@@ -17,7 +17,7 @@ if(NOT CMAKE_BUILD_PARALLEL_LEVEL)
 endif()
 
 if (${CMAKE_BUILD_TYPE} STREQUAL "Release")
-    add_compile_definitions(NDEBUG)
+    add_compile_definitions(ANY_RELEASE)
 endif()
 
 if ((APPLE AND NOT CMAKE_SYSTEM_NAME MATCHES "Darwin") OR EMSCRIPTEN OR WIN32)

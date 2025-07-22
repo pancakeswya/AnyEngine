@@ -130,7 +130,7 @@ GuiRenderer CreateGuiRender(
 
 Api::Api(SDL_Window* window, const float scale_factor, const size_t frame_count, const char* path)
   : instance_(path),
-#ifndef NDEBUG
+#ifndef ANY_RELEASE
     debug_messenger_(instance_),
 #endif
     surface_(window, instance_),
