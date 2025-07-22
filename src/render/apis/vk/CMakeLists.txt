@@ -44,7 +44,6 @@ make_plugin(vk_api
         gui.h
         gui.cc
         ${IMGUI_DIR}/backends/imgui_impl_vulkan.cpp
-        ${IMGUI_DIR}/backends/imgui_impl_sdl3.cpp
         api_plugin.cc
         api.h
         api.cc

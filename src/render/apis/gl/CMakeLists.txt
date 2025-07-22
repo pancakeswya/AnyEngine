@@ -26,7 +26,6 @@ make_plugin(gl_api
         shaders.h
         shaders.cc
         ${IMGUI_DIR}/backends/imgui_impl_opengl3.cpp
-        ${IMGUI_DIR}/backends/imgui_impl_sdl3.cpp
         gui.h
         gui.cc
 )
