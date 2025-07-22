@@ -66,7 +66,7 @@ public:
   static constexpr std::array kExtensions = {
     VK_KHR_SWAPCHAIN_EXTENSION_NAME,
     VK_KHR_MAINTENANCE1_EXTENSION_NAME,
-  #ifdef __APPLE__
+  #ifdef USE_PORTABILITY
     VK_KHR_PORTABILITY_SUBSET_EXTENSION_NAME
   #endif
   };
