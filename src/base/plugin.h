@@ -8,9 +8,7 @@
 
 #include <utility>
 #endif
-#include <memory>
 #include <string>
-#include <functional>
 
 #ifndef PLUGIN_LOAD_STATIC
 #ifdef _WIN32
@@ -32,9 +30,6 @@
 #endif
 
 namespace base {
-
-template <typename HandleType>
-using PluginHandle = std::unique_ptr<HandleType,std::function<void(HandleType*)>>;
 
 class Plugin {
 public:
@@ -87,7 +82,7 @@ public:
   T Load(const std::string& sym_name) const {
     auto proc = SDL_LoadFunction(shared_object_, sym_name.c_str());
     if (proc == nullptr) {
-      throw Error("Failed to load symbol '" + sym_name + "'");
+      throw Error("Failed to load symbol '" + sym_name + "', error: " + SDL_GetError());
     }
     return reinterpret_cast<T>(proc);
   }

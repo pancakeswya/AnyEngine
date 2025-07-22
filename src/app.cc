@@ -7,34 +7,15 @@
 #include "fs/path.h"
 #include "render/mappers/sdl/texture_mapper.h"
 #include "render/mappers/mock/texture_mapper.h"
+#include "resource/scope_exit.h"
 
 #include <filesystem>
-#include <stdexcept>
 
 namespace {
 
-inline float GetScaleFactor() {
-  return SDL_GetDisplayContentScale(SDL_GetPrimaryDisplay());
-}
-
-SDL_Window* CreateWindow(const std::string_view title, const float scale_factor, const SDL_WindowFlags window_flags) {
-  SDL_Window* window = SDL_CreateWindow(
-    title.data(),
-    static_cast<int>(1280 * scale_factor),
-    static_cast<int>(720 * scale_factor),
-    SDL_WINDOW_RESIZABLE |
-    SDL_WINDOW_HIGH_PIXEL_DENSITY |
-    window_flags
-  );
-  if (window == nullptr) {
-    throw App::Error(std::string("Failed to create window, error: ") + SDL_GetError());
-  }
-  return window;
-}
-
 render::Object* LoadObject(const std::string& filename,
-                           const render::ApiHandle& api_handle,
-                           const render::ObjectParserHandle& object_parser_handle) {
+                           render::Api* api_handle,
+                           render::ObjectParser* object_parser_handle) {
   const std::string path = (fs::BasePath() / filename).string();
   std::vector<std::string> texture_paths;
   render::GeometryTransferer& geometry_transferer = object_parser_handle->Parse(path, texture_paths);
@@ -59,29 +40,47 @@ render::Object* LoadObject(const std::string& filename,
 } // namespace
 
 App::App()
-    : scale_factor_(GetScaleFactor()),
-      api_plugin_("libvk_api"),
-      window_(CreateWindow(kTitle, scale_factor_, api_plugin_.GetWindowFlags())),
+    : api_plugin_("libvk_api"),
       object_parser_plugin_("libobj_parser") {}
 
+App::~App() {
+  object_parser_plugin_.DestroyObjectParser(object_parser_);
+  api_plugin_.Destroy(api_, window_);
+}
+
 void App::Init() {
-  api_handle_ = api_plugin_.CreateHandle(window_, scale_factor_);
-  object_parser_handle_ = object_parser_plugin_.CreateHandle();
+  api_ = api_plugin_.CreateApiAndWindow(
+    kTitle.data(),
+    1280,
+    720,
+    SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY,
+    window_
+  );
+  resource::scope_exit render_guard([this] {
+    api_plugin_.Destroy(api_, window_);
+  });
+
+  object_parser_ = object_parser_plugin_.CreateObjectParser();
+  resource::scope_exit object_parser_guard([this] {
+    object_parser_plugin_.DestroyObjectParser(object_parser_);
+  });
+
   object_ = LoadObject(
     "obj/Madara Uchiha/obj/Madara_Uchiha.obj",
-    api_handle_,
-    object_parser_handle_
+    api_,
+    object_parser_
   );
+  resource::release_all(render_guard, object_parser_guard);
 }
 
 SDL_AppResult App::HandleEvent(const SDL_Event* event) const {
-  api_handle_->GetGuiRenderer()->ProcessEvent(event);
+  api_->GetGuiRenderer()->ProcessEvent(event);
   switch (event->type) {
     case SDL_EVENT_TERMINATING:
     case SDL_EVENT_QUIT:
       return SDL_APP_SUCCESS;
     case SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED:
-      api_handle_->OnResize(event->window.data1, event->window.data2);
+      api_->OnResize(event->window.data1, event->window.data2);
       break;
     default:
       break;
@@ -90,7 +89,7 @@ SDL_AppResult App::HandleEvent(const SDL_Event* event) const {
 }
 
 SDL_AppResult App::Iterate() {
-  api_handle_->RenderFrame();
+  api_->RenderFrame();
 
   static auto start_time = std::chrono::high_resolution_clock::now();
 

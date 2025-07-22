@@ -5,6 +5,7 @@ target_sources(render PUBLIC
         api.h
         api_plugin.h
         api_plugin_import.h
+        api_plugin_internal.h
         error.h
         geometry.h
         geometry_transferer.h

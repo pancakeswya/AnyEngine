@@ -7,8 +7,6 @@
 
 namespace render {
 
-using ObjectParserHandle = base::PluginHandle<ObjectParser>;
-
 class ObjectParserPlugin final : base::Plugin {
 public:
   DECLARE_DEFAULT_NO_COPY_CLASS(ObjectParserPlugin);
@@ -18,8 +16,12 @@ public:
       parser_create_(LOAD_SYM(PluginObjectParserCreate)),
       parser_destroy_(LOAD_SYM(PluginObjectParserDestroy)) {}
 
-  [[nodiscard]] ObjectParserHandle CreateHandle() const {
-    return {parser_create_(), parser_destroy_};
+  [[nodiscard]] ObjectParser* CreateObjectParser() const {
+    return parser_create_();
+  }
+
+  void DestroyObjectParser(ObjectParser* parser) const {
+    parser_destroy_(parser);
   }
 private:
   DECLARE_SYM(PluginObjectParserCreate) parser_create_ = nullptr;

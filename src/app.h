@@ -21,23 +21,19 @@ public:
   };
 
   App();
-  ~App() = default;
+  ~App();
 
   void Init();
 
   [[nodiscard]] SDL_AppResult HandleEvent(const SDL_Event* event) const;
   [[nodiscard]] SDL_AppResult Iterate();
 private:
-  float scale_factor_;
-
   render::ApiPlugin api_plugin_;
-  SDL_Window* window_;
-
-  render::ApiHandle api_handle_;
-
   render::ObjectParserPlugin object_parser_plugin_;
-  render::ObjectParserHandle object_parser_handle_;
 
+  SDL_Window* window_ = nullptr;
+  render::Api* api_ = nullptr;
+  render::ObjectParser* object_parser_ = nullptr;
   render::Object* object_ = nullptr;
 };
 

@@ -7,29 +7,31 @@
 
 namespace render {
 
-using ApiHandle = base::PluginHandle<Api>;
-
 class ApiPlugin final : base::Plugin {
 public:
   DECLARE_DEFAULT_NO_COPY_CLASS(ApiPlugin);
 
   explicit ApiPlugin(const std::string& path)
     : Plugin(path),
-      api_create_(LOAD_SYM(PluginRenderApiCreate)),
-      api_destroy_(LOAD_SYM(PluginRenderApiDestroy)),
-      api_get_window_flags_(LOAD_SYM(PluginRenderApiGetWindowFlags)) {}
+      create_api_and_window_(LOAD_SYM(PluginRenderCreateApiAndWindow)),
+      destroy_(LOAD_SYM(PluginRenderDestroy)) {}
 
-  [[nodiscard]] SDL_WindowFlags GetWindowFlags() const {
-    return api_get_window_flags_();
+  [[nodiscard]] Api* CreateApiAndWindow(
+    const char* title,
+    const int width,
+    const int height,
+    const SDL_WindowFlags window_flags,
+    SDL_Window*& window
+  ) const {
+    return create_api_and_window_(title, width, height, window_flags, window);
   }
 
-  [[nodiscard]] ApiHandle CreateHandle(SDL_Window* window, const float scale_factor) const {
-    return {api_create_(window, scale_factor), api_destroy_};
+  void Destroy(Api* api, SDL_Window* window) const {
+    destroy_(api, window);
   }
 private:
-  DECLARE_SYM(PluginRenderApiCreate) api_create_ = nullptr;
-  DECLARE_SYM(PluginRenderApiDestroy) api_destroy_ = nullptr;
-  DECLARE_SYM(PluginRenderApiGetWindowFlags) api_get_window_flags_ = nullptr;
+  DECLARE_SYM(PluginRenderCreateApiAndWindow) create_api_and_window_ = nullptr;
+  DECLARE_SYM(PluginRenderDestroy) destroy_ = nullptr;
 };
 
 } // namespace render
