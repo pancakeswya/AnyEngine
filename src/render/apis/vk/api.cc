@@ -112,11 +112,11 @@ GuiRenderer CreateGuiRender(
     .Device = device,
     .QueueFamily = device.queues().graphics.family_index(),
     .Queue = device.queues().graphics,
-    .DescriptorPoolSize = IMGUI_IMPL_VULKAN_MINIMUM_IMAGE_SAMPLER_POOL_SIZE,
     .RenderPass = render_pass,
     .MinImageCount = min_image_count,
     .ImageCount = image_count,
     .MSAASamples = VK_SAMPLE_COUNT_1_BIT,
+    .DescriptorPoolSize = IMGUI_IMPL_VULKAN_MINIMUM_IMAGE_SAMPLER_POOL_SIZE,
     .CheckVkResultFn =[](const VkResult result) {
       if (result != VK_SUCCESS) {
         throw Error("vk::VkResult = " + std::to_string(result));
