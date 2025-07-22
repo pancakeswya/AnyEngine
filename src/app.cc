@@ -27,7 +27,7 @@ SDL_Window* CreateWindow(const std::string_view title, const float scale_factor,
     window_flags
   );
   if (window == nullptr) {
-    throw App::Error(std::string("Failed to create window") + SDL_GetError());
+    throw App::Error(std::string("Failed to create window, error: ") + SDL_GetError());
   }
   return window;
 }
@@ -77,6 +77,7 @@ void App::Init() {
 SDL_AppResult App::HandleEvent(const SDL_Event* event) const {
   api_handle_->GetGuiRenderer()->ProcessEvent(event);
   switch (event->type) {
+    case SDL_EVENT_TERMINATING:
     case SDL_EVENT_QUIT:
       return SDL_APP_SUCCESS;
     case SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED:

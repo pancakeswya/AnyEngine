@@ -104,7 +104,7 @@ VkInstance CreateInstance(const char* path) {
 #endif
     .enabledExtensionCount = static_cast<uint32_t>(extensions.size()),
     .ppEnabledExtensionNames = extensions.data(),
-#ifdef __APPLE__
+#ifdef USE_PORTABILITY
     .flags = VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR
 #endif
   };

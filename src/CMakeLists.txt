@@ -6,7 +6,10 @@ FetchContent_Declare(
         GIT_TAG         7882684a2cd69005fb57001c17a332899621e2be
 )
 
-set(SDL_SHARED BUILD_SHARED_LIBS)
+if (IOS)
+    set(SDL_SHARED OFF)
+    set(SDL_STATIC ON)
+endif()
 FetchContent_Declare(
         SDL
         GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
@@ -55,6 +58,17 @@ target_compile_features(${EXECUTABLE_NAME} PUBLIC cxx_std_20)
 if (EMSCRIPTEN)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fexceptions")
     target_link_libraries(${EXECUTABLE_NAME} PUBLIC gl_api obj_parser -sMAX_WEBGL_VERSION=2 -sMIN_WEBGL_VERSION=2 -sALLOW_MEMORY_GROWTH=1)
+elseif (IOS)
+    if (BUILD_VK_API)
+        set(IOS_API_LIB vk_api)
+    else()
+        set(IOS_API_LIB gl_api)
+    endif()
+    target_link_libraries(${EXECUTABLE_NAME} PUBLIC ${IOS_API_LIB} obj_parser)
+endif()
+
+if (IOS OR EMSCRIPTEN)
+    add_compile_definitions(PLUGIN_LOAD_STATIC)
 endif()
 
 target_link_libraries(${EXECUTABLE_NAME} PUBLIC SDL3::SDL3 SDL3_mixer::SDL3_mixer)
@@ -73,7 +87,7 @@ else()
         set(APP_SOURCES ${CMAKE_SOURCE_DIR}/resources/icons/logo.png)
         set(BUNDLE_FILES "${CMAKE_SOURCE_DIR}/resources/icons/logo.png")
         if(IOS)
-            list(APPEND APP_SOURCES src/iosLaunchScreen.storyboard)
+            list(APPEND APP_SOURCES ${CMAKE_SOURCE_DIR}/resources/apple/iosLaunchScreen.storyboard)
             set(BUNDLE_FILES "${CMAKE_SOURCE_DIR}/resources/apple/iosLaunchScreen.storyboard;${RESOURCE_FILES}")
         endif()
         target_sources(${EXECUTABLE_NAME} PRIVATE ${APP_SOURCES})

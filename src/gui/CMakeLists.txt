@@ -5,7 +5,7 @@ FetchContent_Declare(
         GIT_REPOSITORY https://github.com/ocornut/imgui.git
         GIT_TAG v1.92.1)
 FetchContent_GetProperties(imgui)
-FetchContent_Populate(imgui)
+FetchContent_MakeAvailable(imgui)
 
 add_library(imgui STATIC)
 target_sources(imgui PRIVATE

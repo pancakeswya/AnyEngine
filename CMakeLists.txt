@@ -16,6 +16,10 @@ if(NOT CMAKE_BUILD_PARALLEL_LEVEL)
     endif()
 endif()
 
+if (${CMAKE_BUILD_TYPE} STREQUAL "Release")
+    add_compile_definitions(NDEBUG)
+endif()
+
 if ((APPLE AND NOT CMAKE_SYSTEM_NAME MATCHES "Darwin") OR EMSCRIPTEN OR WIN32)
     set(BUILD_SHARED_LIBS OFF CACHE INTERNAL "")
 endif()

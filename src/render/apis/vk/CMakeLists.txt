@@ -1,8 +1,8 @@
 include(${CMAKE_SOURCE_DIR}/cmake/plugins.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/shaders.cmake)
 
-set(VK_VERSION "1.3.250")
-set(VK_SDK_TAG "sdk-${VK_VERSION}")
+set(VK_VERSION "1.3.275.0")
+set(VK_SDK_TAG "vulkan-sdk-${VK_VERSION}")
 
 configure_shaders(shaders shaders.in.cc shaders.cc)
 get_target_property(IMGUI_DIR gui GUI_IMGUI_DIR)
@@ -50,15 +50,56 @@ make_plugin(vk_api
         api.cc
 )
 
-if (NOT TARGET Vulkan::Vulkan)
-    find_package(Vulkan REQUIRED)
+if (IOS)
+    function(download_moltenvk)
+        set(MOLTENVK_PLATFORM "static/MoltenVK.xcframework/ios-arm64")
+        if (CMAKE_OSX_SYSROOT MATCHES "iphonesimulator")
+            set(MOLTENVK_PLATFORM "${MOLTENVK_PLATFORM}_x86_64-simulator")
+        endif()
+        set(MOLTENVK_DIR "${CMAKE_BINARY_DIR}/externals/MoltenVK")
+        set(MOLTENVK_TAR "${CMAKE_BINARY_DIR}/externals/MoltenVK.tar")
+        if (NOT EXISTS ${MOLTENVK_DIR})
+            if (NOT EXISTS ${MOLTENVK_TAR})
+                file(DOWNLOAD https://github.com/KhronosGroup/MoltenVK/releases/download/v1.3.0-rc1/MoltenVK-all.tar
+                        ${MOLTENVK_TAR} SHOW_PROGRESS)
+            endif()
+            execute_process(COMMAND ${CMAKE_COMMAND} -E tar xf "${MOLTENVK_TAR}"
+                    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/externals")
+        endif()
+        set(MOLTENVK_LIBRARY "${MOLTENVK_DIR}/MoltenVK/${MOLTENVK_PLATFORM}/libMoltenVK.a" PARENT_SCOPE)
+    endfunction()
+    download_moltenvk()
+
+    FetchContent_Declare(
+            Vulkan-Headers
+            GIT_REPOSITORY https://github.com/KhronosGroup/Vulkan-Headers.git
+            GIT_TAG ${VK_SDK_TAG}
+            GIT_SHALLOW    TRUE
+    )
+    FetchContent_MakeAvailable(Vulkan-Headers)
+    target_link_libraries(vk_api PUBLIC Vulkan::Headers ${MOLTENVK_LIBRARY} "-framework Metal	       \
+                                                                             -framework IOSurface 	   \
+                                                                             -framework CoreGraphics   \
+                                                                             -framework IOKit          \
+                                                                             -framework UIKit 	       \
+                                                                             -framework Foundation     \
+                                                                             -framework QuartzCore     \
+                                                                             -framework CoreFoundation")
+else()
+    if (APPLE)
+        target_compile_definitions(vk_api PUBLIC USE_PORTABILITY)
+    endif()
+    if (NOT TARGET Vulkan::Vulkan)
+        find_package(Vulkan REQUIRED)
+    endif()
+    target_link_libraries(vk_api PUBLIC Vulkan::Vulkan)
 endif()
 
 if (NOT TARGET SDL3::SDL3)
     find_package(SDL3 REQUIRED)
 endif()
 
-if (NOT TARGET shaderc_shared)
+if (NOT TARGET shaderc)
     include(FetchContent)
 
     set(SPIRV_CROSS_CLI OFF)
@@ -101,17 +142,15 @@ if (NOT TARGET shaderc_shared)
     set(SHADERC_ENABLE_SHARED_CRT ON)
     FetchContent_Declare(shaderc
             GIT_REPOSITORY https://github.com/google/shaderc.git
-            GIT_TAG v2024.0
+            GIT_TAG v2024.3
     )
-
     FetchContent_MakeAvailable(SPIRV-Cross SPIRV-Headers SPIRV-Tools glslang shaderc)
 endif()
 
 if (${CMAKE_BUILD_TYPE} STREQUAL "Debug" AND ANDROID)
-    set(VVL_VERSION "${VK_VERSION}.0")
-    set(VVL_NAME Vulkan-ValidationLayers-${VVL_VERSION}.zip)
+    set(VVL_NAME Vulkan-ValidationLayers-${VK_VERSION}.zip)
     if(NOT EXISTS ${CMAKE_BINARY_DIR}/${VVL_NAME})
-        file(DOWNLOAD https://github.com/KhronosGroup/Vulkan-ValidationLayers/releases/download/sdk-${VVL_VERSION}/android-binaries-${VVL_VERSION}.zip ${CMAKE_BINARY_DIR}/${VVL_NAME})
+        file(DOWNLOAD https://github.com/KhronosGroup/Vulkan-ValidationLayers/releases/download/${VK_SDK_TAG}/android-binaries-${VK_VERSION}.zip ${CMAKE_BINARY_DIR}/${VVL_NAME})
     endif()
     if (NOT ${MOBILE_LIBS_DIR})
         file(MAKE_DIRECTORY ${MOBILE_LIBS_DIR})
@@ -121,9 +160,8 @@ endif()
 
 target_include_directories(vk_api PUBLIC ${IMGUI_DIR})
 target_link_libraries(vk_api PUBLIC
-        shaderc_shared
+        shaderc
         SDL3::SDL3
-        Vulkan::Vulkan
         render
 )
 

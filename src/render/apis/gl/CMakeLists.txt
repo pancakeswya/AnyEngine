@@ -31,12 +31,22 @@ make_plugin(gl_api
         gui.cc
 )
 
-if (ANDROID OR EMSCRIPTEN)
+if (ANDROID OR EMSCRIPTEN OR IOS)
     set(GLAD_GL_ARG gles2:core=3.0)
     target_compile_definitions(gl_api PUBLIC RENDER_OPENGL_ES3)
     if (ANDROID)
         target_compile_definitions(gl_api PUBLIC USE_BUFFER_MAP)
         target_link_libraries(gl_api PUBLIC GLESv3)
+    elseif(IOS)
+        target_link_libraries(
+                gl_api PUBLIC "-framework OpenGLES	\
+					-framework UIKit 		\
+					-framework QuartzCore  	\
+					-framework CoreVideo  	\
+					-framework CoreGraphics \
+					-framework AVFoundation \
+					-framework CoreMedia"
+        )
     endif()
 else()
     find_package(OpenGL REQUIRED)

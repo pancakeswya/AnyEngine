@@ -20,17 +20,17 @@ struct Instance : Handle<VkInstance, vkDestroyInstance> {
   static constexpr auto kApiVersion = VK_API_VERSION_1_0;
 
   static constexpr std::array
-#if defined(NDEBUG) && !defined(__APPLE__)
+#if defined(NDEBUG) && !defined(USE_PORTABILITY)
     <const char*, 0>
 #endif
   kExtensions = {
 #ifndef NDEBUG
     VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
 #endif
-#ifdef __APPLE__
+#ifdef USE_PORTABILITY
     VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME,
     VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME,
-#endif // __APPLE__
+#endif // USE_PORTABILITY
   };
   static constexpr std::array
 #if defined(NDEBUG)
