@@ -51,18 +51,7 @@ target_compile_features(${EXECUTABLE_NAME} PUBLIC cxx_std_20)
 
 if (EMSCRIPTEN)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fexceptions")
-    target_link_libraries(${EXECUTABLE_NAME} PUBLIC gl_api obj_parser -sMAX_WEBGL_VERSION=2 -sMIN_WEBGL_VERSION=2 -sALLOW_MEMORY_GROWTH=1)
-elseif (IOS)
-    if (USE_VK_API)
-        set(IOS_API_LIB vk_api)
-    else()
-        set(IOS_API_LIB gl_api)
-    endif()
-    target_link_libraries(${EXECUTABLE_NAME} PUBLIC ${IOS_API_LIB} obj_parser)
-endif()
-
-if (IOS OR EMSCRIPTEN)
-    add_compile_definitions(PLUGIN_LOAD_STATIC)
+    target_link_libraries(${EXECUTABLE_NAME} PUBLIC -sMAX_WEBGL_VERSION=2 -sMIN_WEBGL_VERSION=2 -sALLOW_MEMORY_GROWTH=1)
 endif()
 
 target_compile_definitions(${EXECUTABLE_NAME} PUBLIC
