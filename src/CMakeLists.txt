@@ -26,7 +26,7 @@ FetchContent_MakeAvailable(SDL SDL_mixer)
 
 include_directories(.)
 
-set(USE_VK_API ON)
+option(USE_VK_API "Use vulkan api for render" ON)
 if (EMSCRIPTEN)
     set(USE_VK_API OFF)
 endif()

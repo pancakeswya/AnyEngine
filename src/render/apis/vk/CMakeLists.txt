@@ -68,14 +68,14 @@ if (IOS)
     download_moltenvk()
 
     target_include_directories(vk_render PUBLIC ${MOLTENVK_INCLUDE_DIR})
-    target_link_libraries(vk_render PUBLIC Vulkan::Headers ${MOLTENVK_LIBRARY} "-framework Metal	       \
-                                                                             -framework IOSurface 	   \
-                                                                             -framework CoreGraphics   \
-                                                                             -framework IOKit          \
-                                                                             -framework UIKit 	       \
-                                                                             -framework Foundation     \
-                                                                             -framework QuartzCore     \
-                                                                             -framework CoreFoundation")
+    target_link_libraries(vk_render PUBLIC ${MOLTENVK_LIBRARY} "-framework Metal	       \
+                                                                -framework IOSurface 	   \
+                                                                -framework CoreGraphics   \
+                                                                -framework IOKit          \
+                                                                -framework UIKit 	       \
+                                                                -framework Foundation     \
+                                                                -framework QuartzCore     \
+                                                                -framework CoreFoundation")
 else()
     if (APPLE)
         target_compile_definitions(vk_render PUBLIC USE_PORTABILITY)

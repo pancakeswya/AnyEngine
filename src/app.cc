@@ -1,5 +1,7 @@
 #include "app.h"
 
+#include "resource/scope_exit.h"
+
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/hash.hpp>
 
@@ -21,6 +23,9 @@ SDL_Window* InitAndCreateWindow(
   if (!SDL_Init(SDL_INIT_VIDEO)){
     throw App::Error("SDL_Init failed").WithMessage();
   }
+  resource::scope_exit sdl_guard([] {
+    SDL_Quit();
+  });
   scale_factor = GetScaleFactor();
   SDL_Window* window = SDL_CreateWindow(
     title,
@@ -29,9 +34,9 @@ SDL_Window* InitAndCreateWindow(
     flags
   );
   if (window == nullptr) {
-    SDL_Quit();
     throw App::Error("Failed to create window").WithMessage();
   }
+  sdl_guard.release();
   return window;
 }
 
