@@ -3,6 +3,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/hash.hpp>
 
+#include <chrono>
+
 namespace {
 
 inline float GetScaleFactor() {
