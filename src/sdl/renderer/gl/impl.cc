@@ -39,6 +39,8 @@ SDL_GLContext CreateContext(SDL_Window* window) {
   gl_log_callback = SDL_Log;
 #endif
   SDL_Log("Successfully loaded GL/GLES, version: %s\n", glGetString(GL_VERSION));
+  SDL_GL_MakeCurrent(window, context);
+  SDL_GL_SetSwapInterval(1);
   return context;
 }
 
@@ -50,17 +52,10 @@ RendererImpl::RendererImpl(SDL_Window* window, const float scale_factor)
     renderer_(window_),
     gui_renderer_(
       window,
-      context_,
+      context_.get(),
       ::gl::Api::kGlSlVersion,
       scale_factor
-    ) {
-  SDL_GL_MakeCurrent(window, context_);
-  SDL_GL_SetSwapInterval(1);
-}
-
-RendererImpl::~RendererImpl() {
-  SDL_GL_DestroyContext(context_);
-}
+    ) {}
 
 void RendererImpl::RenderFrame() {
   gui_renderer_.RenderFrame();

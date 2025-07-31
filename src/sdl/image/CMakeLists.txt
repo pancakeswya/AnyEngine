@@ -1,7 +1,3 @@
-if (NOT TARGET SDL3::SDL3)
-    find_package(SDL3 REQUIRED)
-endif()
-
 if (NOT TARGET SDL3_image::SDL3_image)
     include(FetchContent)
 

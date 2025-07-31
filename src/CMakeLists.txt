@@ -31,6 +31,13 @@ if (EMSCRIPTEN)
     set(USE_VK_API OFF)
 endif()
 
+if (NOT USE_VK_API)
+    set(USE_OPENGL_ES3 OFF)
+    if (ANDROID OR EMSCRIPTEN OR IOS)
+        set(USE_OPENGL_ES3 ON)
+    endif()
+endif()
+
 add_subdirectory(resource)
 add_subdirectory(base)
 add_subdirectory(fs)

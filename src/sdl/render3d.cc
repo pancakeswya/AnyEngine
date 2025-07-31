@@ -21,8 +21,8 @@ void Render3D::RenderFrame() {
   renderer_.RenderFrame();
 }
 
-render::Object* Render3D::LoadObject(const std::string& filename) {
-  const std::string path = (fs::BasePath() / filename).string();
+render::Object* Render3D::LoadObject(const std::string& filepath) {
+  const std::string path = (fs::BasePath() / filepath).string();
   std::vector<std::string> texture_paths;
   render::GeometryTransferer& geometry_transferer = parser_.Parse(path, texture_paths);
   return renderer_.LoadObject(geometry_transferer, texture_paths);

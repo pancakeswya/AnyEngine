@@ -9,12 +9,14 @@
 
 #include <SDL3/SDL_video.h>
 
+#include <memory>
+
 namespace sdl::gl {
 
 class RendererImpl final : public Renderer {
 public:
   RendererImpl(SDL_Window* window, float scale_factor);
-  ~RendererImpl() override;
+  ~RendererImpl() override = default;
 
   void RenderFrame() override;
   render::Object* LoadObject(
@@ -23,8 +25,12 @@ public:
   ) override;
   void OnResize(int width, int height) override;
 private:
+  struct GLContextDeleter {
+    void operator()(SDL_GLContext context) const noexcept { SDL_GL_DestroyContext(context); }
+  };
+
   Window window_;
-  SDL_GLContext context_;
+  std::unique_ptr<SDL_GLContextState, GLContextDeleter> context_;
   ::gl::Api renderer_;
   GuiRenderer gui_renderer_;
 };

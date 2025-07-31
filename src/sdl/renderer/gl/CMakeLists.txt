@@ -1,6 +1,6 @@
 
 add_library(sdl_gl_renderer STATIC)
-target_sources(sdl_gl_renderer PRIVATE
+target_sources(sdl_gl_renderer PUBLIC
         gui.h
         gui.cc
         error.h
