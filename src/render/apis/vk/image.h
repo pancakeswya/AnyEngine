@@ -1,6 +1,7 @@
 #ifndef RENDER_APIS_VK_IMAGE_H_
 #define RENDER_APIS_VK_IMAGE_H_
 
+#include "render/apis/vk/buffer.h"
 #include "render/apis/vk/device.h"
 #include "render/apis/vk/command.h"
 #include "render/apis/vk/handle.h"
@@ -8,8 +9,6 @@
 #include <vulkan/vulkan.h>
 
 namespace vk {
-
-class Buffer;
 
 struct ImageInfo {
   VkExtent2D extent;

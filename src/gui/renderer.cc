@@ -2,7 +2,7 @@
 
 #include <imgui.h>
 
-#include <sstream>
+#include <cstdio>
 
 namespace gui {
 

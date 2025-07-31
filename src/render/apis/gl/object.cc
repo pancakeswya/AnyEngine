@@ -1,7 +1,6 @@
 #include "render/apis/gl/object.h"
 
 #include <utility>
-#include <cstring>
 
 namespace gl {
 
@@ -22,13 +21,6 @@ Object::Object(
     vertices_(std::move(vertices)),
     indices_(std::move(indices)),
     uniforms_(std::move(uniforms)),
-    uniforms_mapped_(
-#ifdef USE_BUFFER_MAP
-      nullptr
-#else
-      std::make_unique<render::Uniforms>()
-#endif
-    ),
     textures_(std::move(textures)) {}
 
 } // namespace gl

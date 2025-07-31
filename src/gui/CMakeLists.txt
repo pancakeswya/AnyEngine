@@ -28,6 +28,6 @@ target_sources(gui PRIVATE
         fps_counter.cc
 )
 
-set_target_properties(gui PROPERTIES GUI_IMGUI_DIR ${imgui_SOURCE_DIR})
+set(IMGUI_DIR ${imgui_SOURCE_DIR} PARENT_SCOPE)
 target_include_directories(gui PUBLIC ${imgui_SOURCE_DIR})
 target_link_libraries(gui PUBLIC imgui)

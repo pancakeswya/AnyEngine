@@ -1,7 +1,6 @@
 #ifndef RENDER_APIS_VK_API_H_
 #define RENDER_APIS_VK_API_H_
 
-#include "render/api.h"
 #include "render/apis/vk/instance.h"
 #include "render/apis/vk/surface.h"
 #include "render/apis/vk/device.h"
@@ -11,20 +10,31 @@
 #include "render/apis/vk/sync.h"
 #include "render/apis/vk/command.h"
 #include "render/apis/vk/object.h"
-#include "render/apis/vk/gui.h"
+#include "render/apis/vk/texture_mapper.h"
+#include "render/apis/vk/window.h"
+#include "render/api.h"
 
-#include <SDL3/SDL.h>
 #include <vulkan/vulkan.h>
 
+#include <cstddef>
 #include <vector>
 #include <memory>
+#include <functional>
 
 namespace vk {
 
-class Api final : public render::Api {
+class Api final : public render::Api<TextureMapper> {
 public:
-  explicit Api(SDL_Window* window, float scale_factor, size_t frame_count = 2, const char* path = nullptr);
-  ~Api() override;
+  using RecordFunc = void(*)(VkCommandBuffer command_buffer);
+
+  explicit Api(
+    const Instance& instance,
+    const Window& window,
+    const Surface& surface,
+    RecordFunc record_func,
+    size_t frame_count = 2
+  );
+  ~Api() override = default;
 
   void OnResize(int width, int height) override;
 
@@ -32,23 +42,17 @@ public:
 
   render::Object* LoadObject(
       render::GeometryTransferer& geometry_transferer,
-      std::vector<std::unique_ptr<render::TextureMapper>>& texture_mappers) override;
+      std::vector<std::unique_ptr<TextureMapper>>& texture_mappers
+  ) override;
 
-  render::GuiRenderer* GetGuiRenderer() noexcept override {
-    return &gui_render_;
-  }
+  [[nodiscard]] const Device& device() const noexcept { return device_; }
+  [[nodiscard]] const Swapchain& swapchain() const noexcept { return swapchain_; }
+  [[nodiscard]] const RenderPass& render_pass() const noexcept { return render_pass_; }
+  [[nodiscard]] const std::vector<SwapchainImagePresent>& image_presents() const noexcept { return image_presents_; }
 private:
-  template<VkBufferUsageFlagBits usage>
-  [[nodiscard]] StagingBuffer TransferBufferToStaging(const TransferBuffer& transfer_buffer) const;
+  void RecreateSwapchain(VkExtent2D extent);
+  VkCommandBuffer RecordCommandBuffer(size_t image_idx);
 
-  void RecreateSwapchain(int width, int height);
-  void RecordCommandBuffer(VkCommandBuffer cmd_buffer, size_t image_idx) const;
-
-  Instance instance_;
-#ifndef ANY_RELEASE
-  DebugMessenger debug_messenger_;
-#endif
-  Surface surface_;
   Device device_;
   Swapchain swapchain_;
   Image depth_image_;
@@ -71,9 +75,10 @@ private:
 
   size_t frame_count_;
   size_t current_frame_;
-  SDL_Window* window_;
 
-  GuiRenderer gui_render_;
+  const Window& window_;
+  const Surface& surface_;
+  RecordFunc record_func_;
 };
 
 } // namespace vk

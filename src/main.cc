@@ -1,7 +1,7 @@
 #include "app.h"
 
-#include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
+#include <SDL3/SDL_log.h>
 
 #include <stdexcept>
 
@@ -18,11 +18,7 @@ SDL_AppResult SDL_AppInit(
   [[maybe_unused]]char* argv[]
 ) {
   TRY_WITH_EXIT_ON_CATCH(
-    const auto app = new App;
-    TRY_WITH_EXIT_ON_CATCH (
-      app->Init();
-      *appstate = app;
-    )
+    *appstate = new App;
   )
   SDL_Log("Application started");
 

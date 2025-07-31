@@ -5,40 +5,15 @@
 
 namespace gl {
 
-namespace {
+Api::Api(const Window& window)
+  : program_(kGlSlVersion, GetShaderInfos()),
+    window_(window) {}
 
-#ifdef RENDER_OPENGL_ES3
-constexpr auto kGlSlVersion = "#version 300 es\n";
-#else
-constexpr auto kGlSlVersion = "#version 150\n";
-#endif
-
-GLenum MapFormat(const SDL_PixelFormat format) noexcept {
-  switch (format) {
-    case SDL_PIXELFORMAT_RGBA32:
-      return GL_RGBA;
-    default:
-      break;
-  }
-  return GL_INVALID_ENUM;
-}
-
-} // namespace
-
-Api::Api(SDL_Window* window, const float scale_factor)
-  : context_(window),
-    program_(kGlSlVersion, GetShaderInfos()),
-    window_(window),
-    gui_renderer_(window, context_, kGlSlVersion, scale_factor)
-{}
-
-void Api::OnResize(int width, int height) {
+void Api::OnResize(const int width, const int height) {
   GL_CHECK(glViewport(0, 0, width, height));
 }
 
 void Api::RenderFrame() {
-  gui_renderer_.RenderFrame();
-
   glClearColor(0, 0, 0, 1);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -50,13 +25,12 @@ void Api::RenderFrame() {
       prev_offset = offset;
     }
   }
-  GuiRenderer::Draw();
-  SDL_GL_SwapWindow(window_);
 }
 
 render::Object* Api::LoadObject(
     render::GeometryTransferer& geometry_transferer,
-    std::vector<std::unique_ptr<render::TextureMapper>>& texture_mappers) {
+    std::vector<std::unique_ptr<TextureMapper>>& texture_mappers
+) {
   const render::GeometryInfo geometry_info = geometry_transferer.info();
   const std::vector<render::TextureIndices>& texture_indices = geometry_transferer.texture_indices();
 
@@ -111,14 +85,13 @@ render::Object* Api::LoadObject(
 #endif
   std::vector<Texture> textures;
   textures.reserve(texture_mappers.size());
-  for (const std::unique_ptr<render::TextureMapper>& texture_mapper : texture_mappers) {
-    const auto[width, height, format] = texture_mapper->info();
+  for (const std::unique_ptr<TextureMapper>& texture_mapper : texture_mappers) {
+    const auto[width, height, _] = texture_mapper->info();
 
-    const SDL_PixelFormat sdl_format = MapFormat(format) == GL_INVALID_ENUM ? SDL_PIXELFORMAT_RGBA32 : format;
-    const GLenum gl_format = MapFormat(sdl_format);
+    const GLenum format = texture_mapper->format();
 
-    const uint8_t* pixels = texture_mapper->Map(sdl_format);
-    textures.emplace_back(gl_format, pixels, width, height);
+    const uint8_t* pixels = texture_mapper->Map();
+    textures.emplace_back(format, pixels, width, height);
   }
   objects_.emplace_back(
     geometry_info,

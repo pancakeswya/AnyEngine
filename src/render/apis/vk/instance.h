@@ -10,6 +10,8 @@
 namespace vk {
 
 #ifndef ANY_RELEASE
+using LogCallbackType = void (*)(const char* fmt, ...);
+
 struct DebugMessenger : NonDispatchableRuntimeHandle<VkDebugUtilsMessengerEXT, VkInstance> {
   DECLARE_DEFAULT_NO_COPY_CLASS(DebugMessenger);
   explicit DebugMessenger(VkInstance instance);
@@ -41,8 +43,14 @@ struct Instance : Handle<VkInstance, vkDestroyInstance> {
     "VK_LAYER_KHRONOS_validation"
 #endif
   };
-  explicit Instance(const char* path);
-  ~Instance();
+  Instance(
+    char const* const* window_extensions,
+    size_t window_extension_count
+#ifndef ANY_RELEASE
+    , LogCallbackType log_callback
+#endif
+  );
+  ~Instance() = default;
 
   [[nodiscard]] std::vector<VkPhysicalDevice> devices() const;
 };

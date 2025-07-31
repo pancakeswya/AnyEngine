@@ -1,11 +1,5 @@
 include(FetchContent)
 
-FetchContent_Declare(
-        glm
-        GIT_REPOSITORY  https://github.com/g-truc/glm.git
-        GIT_TAG         7882684a2cd69005fb57001c17a332899621e2be
-)
-
 if (IOS)
     set(SDL_SHARED OFF)
     set(SDL_STATIC ON)
@@ -28,21 +22,21 @@ FetchContent_Declare(
         GIT_TAG 3d55061a1ea31052d23e74256f2ba2cae8586234
 )
 
-FetchContent_MakeAvailable(SDL SDL_mixer glm)
+FetchContent_MakeAvailable(SDL SDL_mixer)
 
 include_directories(.)
 
-set(BUILD_VK_API ON)
-set(BUILD_GL_API ON)
+set(USE_VK_API ON)
 if (EMSCRIPTEN)
-    set(BUILD_VK_API OFF)
+    set(USE_VK_API OFF)
 endif()
 
+add_subdirectory(resource)
 add_subdirectory(base)
 add_subdirectory(fs)
-add_subdirectory(gui)
 add_subdirectory(render)
-add_subdirectory(resource)
+add_subdirectory(gui)
+add_subdirectory(sdl)
 
 set(EXECUTABLE_NAME ${PROJECT_NAME})
 
@@ -59,7 +53,7 @@ if (EMSCRIPTEN)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fexceptions")
     target_link_libraries(${EXECUTABLE_NAME} PUBLIC gl_api obj_parser -sMAX_WEBGL_VERSION=2 -sMIN_WEBGL_VERSION=2 -sALLOW_MEMORY_GROWTH=1)
 elseif (IOS)
-    if (BUILD_VK_API)
+    if (USE_VK_API)
         set(IOS_API_LIB vk_api)
     else()
         set(IOS_API_LIB gl_api)
@@ -71,13 +65,18 @@ if (IOS OR EMSCRIPTEN)
     add_compile_definitions(PLUGIN_LOAD_STATIC)
 endif()
 
-target_link_libraries(${EXECUTABLE_NAME} PUBLIC SDL3::SDL3 SDL3_mixer::SDL3_mixer)
-target_compile_definitions(${EXECUTABLE_NAME} PUBLIC SDL_MAIN_USE_CALLBACKS)
-
-target_link_libraries(${EXECUTABLE_NAME} PUBLIC glm)
-target_compile_definitions(${EXECUTABLE_NAME} PUBLIC GLM_FORCE_RADIANS GLM_FORCE_DEPTH_ZERO_TO_ONE GLM_ENABLE_EXPERIMENTAL)
-
-target_link_libraries(${EXECUTABLE_NAME} PUBLIC texture_transferer_sdl texture_transferer_mock io render resource)
+target_compile_definitions(${EXECUTABLE_NAME} PUBLIC
+        SDL_MAIN_USE_CALLBACKS
+        GLM_FORCE_RADIANS
+        GLM_FORCE_DEPTH_ZERO_TO_ONE
+        GLM_ENABLE_EXPERIMENTAL
+)
+target_link_libraries(${EXECUTABLE_NAME} PUBLIC
+        SDL3::SDL3
+        SDL3_mixer::SDL3_mixer
+        sdl_backend
+        resource
+)
 
 if(EMSCRIPTEN)
     target_link_libraries(${PROJECT_NAME} PRIVATE "--preload-file \"${CMAKE_SOURCE_DIR}/resources/obj/@obj\"")
@@ -143,12 +142,4 @@ else()
             )
         endforeach()
     endif()
-endif()
-
-add_dependencies(${EXECUTABLE_NAME} obj_parser)
-if (BUILD_VK_API)
-    add_dependencies(${EXECUTABLE_NAME} vk_api)
-endif()
-if (BUILD_GL_API)
-    add_dependencies(${EXECUTABLE_NAME} gl_api)
 endif()

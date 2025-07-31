@@ -5,9 +5,9 @@
 
 #include <array>
 #include <cstring>
+#include <limits>
 #include <utility>
 #include <vector>
-#include <limits>
 
 namespace vk {
 
@@ -58,15 +58,6 @@ inline Device SelectDevice(const std::vector<VkPhysicalDevice>& physical_devices
   return Device::Select(physical_devices, requirements);
 }
 
-inline Swapchain CreateSwapchain(const Device& device, const Surface& surface, SDL_Window* window) {
-  VkExtent2D size;
-  SDL_GetWindowSize(window,
-    reinterpret_cast<int*>(&size.width),
-    reinterpret_cast<int*>(&size.height)
-  );
-  return {device, surface, size};
-}
-
 inline Image CreateDepthImage(const Device& device, const Swapchain& swapchain) {
   return {
     device,
@@ -87,55 +78,30 @@ inline Image CreateDepthImage(const Device& device, const Swapchain& swapchain) 
   };
 }
 
-VkFormat MapFormat(const SDL_PixelFormat format) noexcept {
-    switch (format) {
-      case SDL_PIXELFORMAT_RGBA32: return VK_FORMAT_R8G8B8A8_UNORM;
-      default:
-        break;
-    }
-    return VK_FORMAT_UNDEFINED;
-}
-
-GuiRenderer CreateGuiRender(
-  SDL_Window* window,
-  VkInstance instance,
-  const Device& device,
-  VkRenderPass render_pass,
-  const uint32_t min_image_count,
-  const uint32_t image_count,
-  const float scale_factor
-) {
-  ImGui_ImplVulkan_InitInfo init_info = {
-    .ApiVersion = Instance::kApiVersion,
-    .Instance = instance,
-    .PhysicalDevice = device.physical_device(),
-    .Device = device,
-    .QueueFamily = device.queues().graphics.family_index(),
-    .Queue = device.queues().graphics,
-    .RenderPass = render_pass,
-    .MinImageCount = min_image_count,
-    .ImageCount = image_count,
-    .MSAASamples = VK_SAMPLE_COUNT_1_BIT,
-    .DescriptorPoolSize = IMGUI_IMPL_VULKAN_MINIMUM_IMAGE_SAMPLER_POOL_SIZE,
-    .CheckVkResultFn =[](const VkResult result) {
-      if (result != VK_SUCCESS) {
-        throw Error("vk::VkResult = " + std::to_string(result));
-      }
-    }
-  };
-  return {window, scale_factor, &init_info};
+template <VkBufferUsageFlagBits usage>
+inline StagingBuffer TransferBufferToStaging(
+    const Device& device,
+    const CommandPool& command_pool,
+    const Queue& graphics_queue,
+    const TransferBuffer& transfer_buffer) {
+  StagingBuffer staging_buffer(device, usage, transfer_buffer.size());
+  BufferCommander commander(staging_buffer,  command_pool, graphics_queue);
+  CommanderGuard commander_guard(commander);
+  commander.CopyBuffer(transfer_buffer);
+  return staging_buffer;
 }
 
 } // namespace
 
-Api::Api(SDL_Window* window, const float scale_factor, const size_t frame_count, const char* path)
-  : instance_(path),
-#ifndef ANY_RELEASE
-    debug_messenger_(instance_),
-#endif
-    surface_(window, instance_),
-    device_(SelectDevice(instance_.devices(), surface_)),
-    swapchain_(CreateSwapchain(device_, surface_, window)),
+Api::Api(
+  const Instance& instance,
+  const Window& window,
+  const Surface& surface,
+  const RecordFunc record_func,
+  const size_t frame_count
+)
+  : device_(SelectDevice(instance.devices(), surface)),
+    swapchain_(device_, surface, window.size()),
     depth_image_(CreateDepthImage(device_, swapchain_)),
     render_pass_(device_, swapchain_.image_info().format, depth_image_.info().format),
     image_presents_(CreateSwapchainImagePresents(device_, swapchain_, render_pass_, depth_image_.view())),
@@ -151,43 +117,26 @@ Api::Api(SDL_Window* window, const float scale_factor, const size_t frame_count,
     frame_count_(frame_count),
     current_frame_(0),
     window_(window),
-    gui_render_(CreateGuiRender(
-      window,
-      instance_,
-      device_,
-      render_pass_,
-      swapchain_.min_image_count(),
-      image_presents_.size(),
-      scale_factor
-    ))
-{}
+    surface_(surface),
+    record_func_(record_func) {}
 
-Api::~Api() {
-  vkDeviceWaitIdle(device_);
-}
-
-void Api::OnResize([[maybe_unused]]const int width, [[maybe_unused]]const int height) {
-  RecreateSwapchain(width, height);
+void Api::OnResize(const int width, const int height) {
+  const VkExtent2D extent = {
+    .width = static_cast<uint32_t>(width),
+    .height = static_cast<uint32_t>(height)
+  };
+  RecreateSwapchain(extent);
 }
 
 void Api::RenderFrame() {
-  gui_render_.RenderFrame();
-
   uint32_t image_idx;
 
   VkFence fence = fences_[current_frame_];
   VkSemaphore acquire_semaphore = acquire_semaphores_[current_frame_];
-  VkCommandBuffer cmd_buffer = command_buffers_[current_frame_];
 
   const auto recreate_swapchain = [this]{
-    int width, height;
-    SDL_GetWindowSizeInPixels(window_,
-      &width,
-      &height
-    );
-    RecreateSwapchain(width, height);
+    RecreateSwapchain(window_.size());
   };
-
   if (const VkResult result = vkWaitForFences(device_, 1, &fence, VK_TRUE, std::numeric_limits<uint64_t>::max()); result != VK_SUCCESS) {
     throw Error("failed to wait for fences").WithCode(result);
   }
@@ -202,10 +151,8 @@ void Api::RenderFrame() {
     throw Error("failed to acquire next image").WithCode(result);
   }
   VkSemaphore submit_semaphore = submit_semaphores_[image_idx];
-  if (const VkResult result = vkResetCommandBuffer(cmd_buffer, 0); result != VK_SUCCESS) {
-    throw Error("failed to reset command buffer").WithCode(result);
-  }
-  RecordCommandBuffer(cmd_buffer, image_idx);
+
+  VkCommandBuffer command_buffer = RecordCommandBuffer(image_idx);
 
   constexpr std::array<VkPipelineStageFlags, 1> pipeline_stages = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
 
@@ -215,7 +162,7 @@ void Api::RenderFrame() {
     .pWaitSemaphores = &acquire_semaphore,
     .pWaitDstStageMask = pipeline_stages.data(),
     .commandBufferCount = 1,
-    .pCommandBuffers = &cmd_buffer,
+    .pCommandBuffers = &command_buffer,
     .signalSemaphoreCount = 1,
     .pSignalSemaphores = &submit_semaphore
   };
@@ -243,19 +190,9 @@ void Api::RenderFrame() {
   }
 }
 
-template <VkBufferUsageFlagBits usage>
-inline StagingBuffer Api::TransferBufferToStaging(
-    const TransferBuffer& transfer_buffer) const {
-  StagingBuffer staging_buffer(device_, usage, transfer_buffer.size());
-  BufferCommander commander(staging_buffer, command_pool_, device_.queues().graphics);
-  CommanderGuard commander_guard(commander);
-  commander.CopyBuffer(transfer_buffer);
-  return staging_buffer;
-}
-
 render::Object* Api::LoadObject(
     render::GeometryTransferer& geometry_transferer,
-    std::vector<std::unique_ptr<render::TextureMapper>>& texture_mappers
+    std::vector<std::unique_ptr<TextureMapper>>& texture_mappers
 ) {
   const render::GeometryInfo geometry_info = geometry_transferer.info();
   const std::vector<render::TextureIndices>& texture_indices = geometry_transferer.texture_indices();
@@ -271,22 +208,20 @@ render::Object* Api::LoadObject(
   transfer_vertices.memory().Unmap();
   transfer_indices.memory().Unmap();
 
-  StagingBuffer staging_vertices = TransferBufferToStaging<VK_BUFFER_USAGE_VERTEX_BUFFER_BIT>(transfer_vertices);
-  StagingBuffer staging_indices = TransferBufferToStaging<VK_BUFFER_USAGE_INDEX_BUFFER_BIT>(transfer_indices);
+  const Queue& graphics_queue = device_.queues().graphics;
+  StagingBuffer staging_vertices = TransferBufferToStaging<VK_BUFFER_USAGE_VERTEX_BUFFER_BIT>(device_, command_pool_, graphics_queue, transfer_vertices);
+  StagingBuffer staging_indices = TransferBufferToStaging<VK_BUFFER_USAGE_INDEX_BUFFER_BIT>(device_, command_pool_, graphics_queue, transfer_indices);
 
   std::vector<StagingImage> images;
   images.reserve(texture_mappers.size());
-  for (const std::unique_ptr<render::TextureMapper>& texture_mapper : texture_mappers) {
-    const auto[width, height, format] = texture_mapper->info();
+  for (const std::unique_ptr<TextureMapper>& texture_mapper : texture_mappers) {
+    const auto[width, height, bytes_per_pixel] = texture_mapper->info();
 
-    const SDL_PixelFormat sdl_format = MapFormat(format) == VK_FORMAT_UNDEFINED ? SDL_PIXELFORMAT_RGBA32 : format;
-    const VkFormat vk_format = MapFormat(sdl_format);
-
-    const size_t pixel_count = width * height * SDL_BYTESPERPIXEL(sdl_format);
+    const size_t pixel_count = width * height * bytes_per_pixel;
 
     const TransferBuffer transfer_texture(device_, pixel_count);
 
-    const uint8_t* pixels = texture_mapper->Map(sdl_format);
+    const uint8_t* pixels = texture_mapper->Map();
     const auto pixels_mapped = transfer_texture.memory().Map<uint8_t>();;
     std::memcpy(pixels_mapped, pixels, pixel_count);
 
@@ -296,7 +231,8 @@ render::Object* Api::LoadObject(
       .width = static_cast<uint32_t>(width),
       .height = static_cast<uint32_t>(height),
     };
-    StagingImage image(device_, extent, vk_format);
+    const VkFormat format = texture_mapper->format();
+    StagingImage image(device_, extent, format);
 
     ImageCommander commander(image, command_pool_, device_.queues().graphics);
 
@@ -321,14 +257,10 @@ render::Object* Api::LoadObject(
   return objects_.data() + objects_.size() - 1;
 }
 
-void Api::RecreateSwapchain(const int width, const int height) {
+void Api::RecreateSwapchain(const VkExtent2D extent) {
   if (const VkResult result = vkDeviceWaitIdle(device_); result != VK_SUCCESS) {
     throw Error("failed to idle device");
   }
-  const VkExtent2D extent = {
-    .width = static_cast<uint32_t>(width),
-    .height = static_cast<uint32_t>(height),
-  };
   swapchain_ = Swapchain(device_, surface_, extent, swapchain_);
   depth_image_ = CreateDepthImage(device_, swapchain_);
   image_presents_ = CreateSwapchainImagePresents(device_, swapchain_, render_pass_, depth_image_.view());
@@ -338,11 +270,15 @@ void Api::RecreateSwapchain(const int width, const int height) {
   fences_ = CreateSyncObjects<Fence>(device_, frame_count_);
 }
 
-void Api::RecordCommandBuffer(VkCommandBuffer cmd_buffer, const size_t image_idx) const {
+VkCommandBuffer Api::RecordCommandBuffer(const size_t image_idx) {
+  VkCommandBuffer command_buffer = command_buffers_[current_frame_];
+  if (const VkResult result = vkResetCommandBuffer(command_buffer, 0); result != VK_SUCCESS) {
+    throw Error("failed to reset command buffer").WithCode(result);
+  }
   constexpr VkCommandBufferBeginInfo cmd_buffer_begin_info = {
     .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
   };
-  if (const VkResult result = vkBeginCommandBuffer(cmd_buffer, &cmd_buffer_begin_info);
+  if (const VkResult result = vkBeginCommandBuffer(command_buffer, &cmd_buffer_begin_info);
       result != VK_SUCCESS) {
     throw Error("failed to begin recording command buffer").WithCode(result);
   }
@@ -361,8 +297,8 @@ void Api::RecordCommandBuffer(VkCommandBuffer cmd_buffer, const size_t image_idx
     .clearValueCount = static_cast<uint32_t>(clear_values.size()),
     .pClearValues = clear_values.data()
   };
-  vkCmdBeginRenderPass(cmd_buffer, &render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
-  vkCmdBindPipeline(cmd_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline_);
+  vkCmdBeginRenderPass(command_buffer, &render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
+  vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline_);
 
   const VkExtent2D extent = swapchain_.image_info().extent;
   const VkViewport viewport = {
@@ -373,13 +309,13 @@ void Api::RecordCommandBuffer(VkCommandBuffer cmd_buffer, const size_t image_idx
     .minDepth = 0.0f,
     .maxDepth = 1.0f
   };
-  vkCmdSetViewport(cmd_buffer, 0, 1, &viewport);
+  vkCmdSetViewport(command_buffer, 0, 1, &viewport);
 
   const VkRect2D scissor = {
     .offset = {0, 0},
     .extent = extent
   };
-  vkCmdSetScissor(cmd_buffer, 0, 1, &scissor);
+  vkCmdSetScissor(command_buffer, 0, 1, &scissor);
 
   for(const Object& object : objects_) {
     VkBuffer vertices_buffer = object.vertices();
@@ -389,23 +325,24 @@ void Api::RecordCommandBuffer(VkCommandBuffer cmd_buffer, const size_t image_idx
     VkDeviceSize prev_offset = 0;
     constexpr std::array<VkDeviceSize, 1> vertex_offsets = {};
 
-    vkCmdBindVertexBuffers(cmd_buffer, 0, vertex_offsets.size(), &vertices_buffer, vertex_offsets.data());
-    vkCmdBindDescriptorSets(cmd_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline_layout_, 0, 1, &uniform_descriptor_set, 0, nullptr);
+    vkCmdBindVertexBuffers(command_buffer, 0, vertex_offsets.size(), &vertices_buffer, vertex_offsets.data());
+    vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline_layout_, 0, 1, &uniform_descriptor_set, 0, nullptr);
 
     for(const auto[index, offset] : object.texture_indices()) {
       VkDescriptorSet sampler_descriptor_set = object.sampler_descriptor_sets().at(index);
-      vkCmdBindIndexBuffer(cmd_buffer, indices_buffer, prev_offset * sizeof(Index), IndexType<Index>::value);
-      vkCmdBindDescriptorSets(cmd_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline_layout_, 1, 1, &sampler_descriptor_set, 0, nullptr);
-      vkCmdDrawIndexed(cmd_buffer, static_cast<uint32_t>(offset - prev_offset), 1, 0, 0, 0);
+      vkCmdBindIndexBuffer(command_buffer, indices_buffer, prev_offset * sizeof(Index), IndexType<Index>::value);
+      vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline_layout_, 1, 1, &sampler_descriptor_set, 0, nullptr);
+      vkCmdDrawIndexed(command_buffer, static_cast<uint32_t>(offset - prev_offset), 1, 0, 0, 0);
 
       prev_offset = offset;
     }
   }
-  GuiRenderer::Record(cmd_buffer);
-  vkCmdEndRenderPass(cmd_buffer);
-  if (const VkResult result = vkEndCommandBuffer(cmd_buffer); result != VK_SUCCESS) {
+  record_func_(command_buffer);
+  vkCmdEndRenderPass(command_buffer);
+  if (const VkResult result = vkEndCommandBuffer(command_buffer); result != VK_SUCCESS) {
     throw Error("failed to record command buffer").WithCode(result);
   }
+  return command_buffer;
 }
 
 } // namespace vk

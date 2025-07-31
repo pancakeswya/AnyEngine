@@ -2,8 +2,6 @@
 
 #include "render/apis/vk/error.h"
 
-#include <utility>
-
 namespace vk {
 
 namespace {

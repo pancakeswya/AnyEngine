@@ -1,11 +1,11 @@
 #ifndef RENDER_APIS_VK_OBJECT_H_
 #define RENDER_APIS_VK_OBJECT_H_
 
+#include "base/decl.h"
 #include "render/object.h"
 #include "render/apis/vk/buffer.h"
 #include "render/apis/vk/image.h"
 #include "render/apis/vk/descriptor.h"
-#include "render/apis/vk/handle.h"
 
 #include <vulkan/vulkan.h>
 

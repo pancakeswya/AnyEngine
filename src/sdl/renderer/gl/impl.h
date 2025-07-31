@@ -1,0 +1,34 @@
+#ifndef SDL_RENDERER_GL_IMPL_H_
+#define SDL_RENDERER_GL_IMPL_H_
+
+#include "sdl/renderer/gl/gui.h"
+#include "sdl/renderer/gl/window.h"
+#include "sdl/renderer/renderer.h"
+
+#include "render/apis/gl/api.h"
+
+#include <SDL3/SDL_video.h>
+
+namespace sdl::gl {
+
+class RendererImpl final : public Renderer {
+public:
+  RendererImpl(SDL_Window* window, float scale_factor);
+  ~RendererImpl() override;
+
+  void RenderFrame() override;
+  render::Object* LoadObject(
+    render::GeometryTransferer& geometry_transferer,
+    const std::vector<std::string>& texture_paths
+  ) override;
+  void OnResize(int width, int height) override;
+private:
+  Window window_;
+  SDL_GLContext context_;
+  ::gl::Api renderer_;
+  GuiRenderer gui_renderer_;
+};
+
+} // sdl::gl
+
+#endif // SDL_RENDERER_GL_IMPL_H_

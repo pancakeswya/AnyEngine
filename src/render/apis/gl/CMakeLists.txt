@@ -1,16 +1,13 @@
 include(FetchContent)
-include(${CMAKE_SOURCE_DIR}/cmake/plugins.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/shaders.cmake)
 
 configure_shaders(shaders shaders.in.cc shaders.cc)
 
-get_target_property(IMGUI_DIR gui GUI_IMGUI_DIR)
-make_plugin(gl_api
+add_library(gl_render STATIC)
+target_sources(gl_render PRIVATE
         api.h
         api.cc
-        api_plugin.cc
-        context.h
-        context.cc
+        check.cc
         check.h
         handle.h
         loader.h
@@ -25,20 +22,19 @@ make_plugin(gl_api
         shader.cc
         shaders.h
         shaders.cc
-        ${IMGUI_DIR}/backends/imgui_impl_opengl3.cpp
-        gui.h
-        gui.cc
+        texture_mapper.h
+        window.h
 )
 
-if (ANDROID OR EMSCRIPTEN OR IOS)
+if (USE_OPENGL_ES3)
     set(GLAD_GL_ARG gles2:core=3.0)
-    target_compile_definitions(gl_api PUBLIC RENDER_OPENGL_ES3)
+    target_compile_definitions(gl_render PUBLIC USE_OPENGL_ES3)
     if (ANDROID)
-        target_compile_definitions(gl_api PUBLIC USE_BUFFER_MAP)
-        target_link_libraries(gl_api PUBLIC GLESv3)
+        target_compile_definitions(gl_render PUBLIC USE_BUFFER_MAP)
+        target_link_libraries(gl_render PUBLIC GLESv3)
     elseif(IOS)
         target_link_libraries(
-                gl_api PUBLIC "-framework OpenGLES	\
+                gl_render PUBLIC "-framework OpenGLES	\
 					-framework UIKit 		\
 					-framework QuartzCore  	\
 					-framework CoreVideo  	\
@@ -50,12 +46,8 @@ if (ANDROID OR EMSCRIPTEN OR IOS)
 else()
     find_package(OpenGL REQUIRED)
     set(GLAD_GL_ARG gl:core=3.3)
-    target_compile_definitions(gl_api PUBLIC USE_BUFFER_MAP)
-    target_link_libraries(gl_api PUBLIC OpenGL::GL)
-endif()
-
-if (NOT TARGET SDL3::SDL3)
-    find_package(SDL3 REQUIRED)
+    target_compile_definitions(gl_render PUBLIC USE_BUFFER_MAP)
+    target_link_libraries(gl_render PUBLIC OpenGL::GL)
 endif()
 
 if (NOT TARGET glad)
@@ -69,6 +61,6 @@ if (NOT TARGET glad)
     glad_add_library(glad STATIC API ${GLAD_GL_ARG} LOCATION ${CMAKE_BINARY_DIR}/glad-build/${TARGET})
 endif()
 
-target_include_directories(gl_api PUBLIC ${IMGUI_DIR})
-target_compile_definitions(gl_api PUBLIC USE_VAO)
-target_link_libraries(gl_api PUBLIC SDL3::SDL3 glad render)
+target_include_directories(gl_render PUBLIC ${IMGUI_DIR})
+target_compile_definitions(gl_render PUBLIC USE_VAO)
+target_link_libraries(gl_render PUBLIC glad render)

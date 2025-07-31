@@ -6,8 +6,6 @@
 
 #include <utility>
 
-#define RUNTIME_HANDLE(TYPE1, DESTROY_FUNC) Handle<TYPE1, decltype(DESTROY_FUNC)>
-
 namespace gl {
 
 class ArrayHandle {
@@ -68,18 +66,19 @@ private:
   }
 };
 
-template<typename HandleType, typename DestroyFuncType>
 class Handle {
 public:
-  Handle() noexcept : handle_(0) {}
+  using DestroyFuncType = void(*)(GLuint);
 
-  explicit Handle(HandleType handle, DestroyFuncType destroy) noexcept
+  Handle() noexcept : handle_(GL_INVALID_VALUE) {}
+
+  explicit Handle(const GLuint handle, const DestroyFuncType destroy) noexcept
      : handle_(handle), destroy_(destroy) {}
 
   Handle(const Handle& other) = delete;
 
   Handle(Handle&& other) noexcept :
-    handle_(std::exchange(other.handle_, 0)),
+    handle_(std::exchange(other.handle_, GL_INVALID_VALUE)),
     destroy_(std::exchange(other.destroy_, nullptr)) {}
 
   ~Handle() {
@@ -91,17 +90,17 @@ public:
   Handle& operator=(Handle&& other) noexcept {
     if (this != &other) {
       Destroy();
-      handle_ = std::exchange(other.handle_, 0);
+      handle_ = std::exchange(other.handle_, GL_INVALID_VALUE);
       destroy_ = std::exchange(other.destroy_, nullptr);
     }
     return *this;
   }
 
-  [[nodiscard]]operator HandleType() const noexcept {
+  [[nodiscard]]operator GLuint() const noexcept {
     return handle_;
   }
 protected:
-  HandleType handle_;
+  GLuint handle_;
 private:
   DestroyFuncType destroy_;
 

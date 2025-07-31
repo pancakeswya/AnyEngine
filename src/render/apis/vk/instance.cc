@@ -3,38 +3,39 @@
 #include "render/apis/vk/error.h"
 
 #ifndef ANY_RELEASE
-#include <SDL3/SDL_log.h>
-#endif
-#include <SDL3/SDL_vulkan.h>
-
 #include <cstring>
 #include <utility>
-#include <vector>
+#endif
 
 namespace vk {
 
 namespace {
 
 #ifndef ANY_RELEASE
+
 VKAPI_ATTR VkBool32 VKAPI_CALL MessageCallback(
   [[maybe_unused]]VkDebugUtilsMessageSeverityFlagBitsEXT message_severity,
   [[maybe_unused]]VkDebugUtilsMessageTypeFlagsEXT message_type,
   const VkDebugUtilsMessengerCallbackDataEXT* callback_data,
-  [[maybe_unused]]void* user_data) {
-  SDL_Log("Vulkan Debug message: %s\n", callback_data->pMessage);
+  void* user_data) {
+  if (const auto log_callback = reinterpret_cast<LogCallbackType>(user_data); log_callback != nullptr) {
+    log_callback("Vulkan Debug message: %s\n", callback_data->pMessage);
+  }
   return VK_FALSE;
 }
 
-constexpr VkDebugUtilsMessengerCreateInfoEXT kMessengerCreateInfo = {
-  .sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT,
-  .messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT |
-                     VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
-                     VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT,
-  .messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
-                 VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
-                 VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT,
-  .pfnUserCallback = MessageCallback
-};
+VkDebugUtilsMessengerCreateInfoEXT GetMessengerCreateInfo() {
+  return {
+    .sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT,
+    .messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT |
+                       VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
+                       VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT,
+    .messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
+                   VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
+                   VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT,
+    .pfnUserCallback = MessageCallback
+  };
+}
 
 bool LayersAreSupported() {
   uint32_t layer_count;
@@ -59,25 +60,13 @@ bool LayersAreSupported() {
 }
 #endif // ANY_RELEASE
 
-inline std::vector<const char*> GetInstanceExtensions() {
-  std::vector extensions(
-    Instance::kExtensions.begin(),
-    Instance::kExtensions.end()
-  );
-  Uint32 extension_count = 0;
-  char const* const* window_extensions = SDL_Vulkan_GetInstanceExtensions(&extension_count);
-  extensions.insert(
-    extensions.end(),
-    window_extensions,
-    window_extensions + extension_count
-  );
-  return extensions;
-}
-
-VkInstance CreateInstance(const char* path) {
-  if (!SDL_Vulkan_LoadLibrary(path)) {
-    throw Error("sdl load vulkan failed");
-  }
+VkInstance CreateInstance(
+  char const* const* window_extensions,
+  size_t window_extension_count
+  #ifndef ANY_RELEASE
+  , LogCallbackType log_callback
+  #endif
+) {
   constexpr VkApplicationInfo app_info = {
     .sType = VK_STRUCTURE_TYPE_APPLICATION_INFO,
     .pApplicationName = "VulkanFun",
@@ -90,12 +79,22 @@ VkInstance CreateInstance(const char* path) {
   if (!LayersAreSupported()) {
     throw Error("Instance layers are not supported");
   }
+  VkDebugUtilsMessengerCreateInfoEXT messenger_create_info = GetMessengerCreateInfo();
+  messenger_create_info.pUserData = reinterpret_cast<void*>(log_callback);
 #endif
-  std::vector extensions = GetInstanceExtensions();
+  std::vector extensions(
+    Instance::kExtensions.begin(),
+    Instance::kExtensions.end()
+  );
+  extensions.insert(
+    extensions.end(),
+    window_extensions,
+    window_extensions + window_extension_count
+  );
   const VkInstanceCreateInfo create_info = {
     .sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
 #ifndef ANY_RELEASE
-    .pNext = &kMessengerCreateInfo,
+    .pNext = &messenger_create_info,
 #endif
     .pApplicationInfo = &app_info,
 #ifndef ANY_RELEASE
@@ -123,8 +122,9 @@ inline VkDebugUtilsMessengerEXT CreateMessenger(VkInstance instance) {
   if (create_messenger == nullptr) {
     throw Error("Couldn't find vkCreateDebugUtilsMessengerEXT by procc addr");
   }
+  const VkDebugUtilsMessengerCreateInfoEXT create_info = GetMessengerCreateInfo();
   VkDebugUtilsMessengerEXT messenger = VK_NULL_HANDLE;
-  if (const VkResult result = create_messenger(instance, &kMessengerCreateInfo, nullptr, &messenger); result != VK_SUCCESS) {
+  if (const VkResult result = create_messenger(instance, &create_info, nullptr, &messenger); result != VK_SUCCESS) {
     throw Error("failed to set up debug messenger").WithCode(result);
   }
   return messenger;
@@ -145,14 +145,23 @@ inline auto GetMessengerDestroyFunc(VkInstance instance) {
 } // namespace
 
 #ifndef ANY_RELEASE
-DebugMessenger::DebugMessenger(VkInstance instance) : NonDispatchableRuntimeHandle(CreateMessenger(instance), instance, GetMessengerDestroyFunc(instance)) {}
+DebugMessenger::DebugMessenger(VkInstance instance)
+  : NonDispatchableRuntimeHandle(CreateMessenger(instance), instance, GetMessengerDestroyFunc(instance)) {}
 #endif // ANY_RELEASE
 
-Instance::Instance(const char* path) : Handle(CreateInstance(path)) {}
-
-Instance::~Instance() {
-  SDL_Vulkan_UnloadLibrary();
-}
+Instance::Instance(
+  char const* const* window_extensions,
+  size_t window_extension_count
+#ifndef ANY_RELEASE
+  , LogCallbackType log_callback
+#endif
+) : Handle(CreateInstance(
+    window_extensions,
+    window_extension_count
+#ifndef ANY_RELEASE
+    , log_callback
+#endif
+  )) {}
 
 std::vector<VkPhysicalDevice> Instance::devices() const {
   uint32_t device_count = 0;

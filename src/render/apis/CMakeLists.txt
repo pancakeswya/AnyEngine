@@ -1,6 +1,5 @@
-if (BUILD_VK_API)
+if (USE_VK_API)
     add_subdirectory(vk)
-endif()
-if (BUILD_GL_API)
+else()
     add_subdirectory(gl)
 endif()

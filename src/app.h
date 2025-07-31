@@ -1,39 +1,35 @@
 #ifndef APP_H_
 #define APP_H_
 
-#include "base/error.h"
-#include "render/api_plugin_import.h"
+#include "sdl/render3d.h"
+#include "sdl/error.h"
 #include "render/object.h"
-#include "render/object_parser_plugin_import.h"
 
 #include <SDL3/SDL.h>
 
 class App {
 public:
   static constexpr std::string_view kTitle = "3D Render";
+  static constexpr int kWidth = 1280;
+  static constexpr int kHeight = 720;
 
   static App* Cast(void *appstate) {
     return static_cast<App*>(appstate);
   }
 
-  struct Error final : base::Error {
-    using base::Error::Error;
+  struct Error final : sdl::Error {
+    using sdl::Error::Error;
   };
 
   App();
   ~App();
 
-  void Init();
-
-  [[nodiscard]] SDL_AppResult HandleEvent(const SDL_Event* event) const;
+  [[nodiscard]] SDL_AppResult HandleEvent(const SDL_Event* event);
   [[nodiscard]] SDL_AppResult Iterate();
 private:
-  render::ApiPlugin api_plugin_;
-  render::ObjectParserPlugin object_parser_plugin_;
-
-  SDL_Window* window_ = nullptr;
-  render::Api* api_ = nullptr;
-  render::ObjectParser* object_parser_ = nullptr;
+  float scale_factor_ = 1.0f;
+  SDL_Window* window_;
+  sdl::Render3D render_;
   render::Object* object_ = nullptr;
 };
 

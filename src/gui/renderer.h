@@ -3,8 +3,6 @@
 
 #include "gui/fps_counter.h"
 
-#include <string>
-
 namespace gui {
 
 class Renderer {

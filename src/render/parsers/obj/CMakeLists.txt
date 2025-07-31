@@ -1,16 +1,12 @@
 include(${CMAKE_SOURCE_DIR}/cmake/plugins.cmake)
 include(FetchContent)
 
-if (NOT TARGET SDL3::SDL3)
-    find_package(SDL3 REQUIRED)
-endif()
-
-make_plugin(obj_parser
+add_library(obj_parser STATIC)
+target_sources(obj_parser PRIVATE
         error.h
         types.h
         object_parser.h
         object_parser.cc
-        object_parser_plugin.cc
         transferer.h
         transferer.cc
 )
@@ -26,4 +22,4 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(earcut)
 
-target_link_libraries(obj_parser PUBLIC SDL3::SDL3 earcut_hpp::earcut_hpp io render)
+target_link_libraries(obj_parser PUBLIC earcut_hpp::earcut_hpp io render)

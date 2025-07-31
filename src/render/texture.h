@@ -1,8 +1,6 @@
 #ifndef RENDER_TEXTURE_H_
 #define RENDER_TEXTURE_H_
 
-#include <SDL3/SDL_pixels.h>
-
 #include <cstddef>
 
 namespace render {
@@ -15,8 +13,7 @@ struct TextureIndices {
 struct TextureInfo {
   size_t width;
   size_t height;
-
-  SDL_PixelFormat format;
+  size_t bytes_per_pixel;
 };
 
 } // namespace render

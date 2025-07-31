@@ -2,86 +2,60 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/hash.hpp>
-#include <SDL3/SDL_log.h>
-
-#include "fs/path.h"
-#include "render/mappers/sdl/texture_mapper.h"
-#include "render/mappers/mock/texture_mapper.h"
-#include "resource/scope_exit.h"
-
-#include <filesystem>
 
 namespace {
 
-render::Object* LoadObject(const std::string& filename,
-                           render::Api* api_handle,
-                           render::ObjectParser* object_parser_handle) {
-  const std::string path = (fs::BasePath() / filename).string();
-  std::vector<std::string> texture_paths;
-  render::GeometryTransferer& geometry_transferer = object_parser_handle->Parse(path, texture_paths);
-  std::vector<std::unique_ptr<render::TextureMapper>> texture_mappers;
-  texture_mappers.reserve(texture_paths.size());
-  if (texture_paths.empty()) {
-    texture_mappers.emplace_back(std::make_unique<mock::TextureMapper>());
-  } else {
-    for (const std::string& texture_path : texture_paths) {
-      try {
-        std::filesystem::path texture_filepath(texture_path);
-        texture_mappers.emplace_back(std::make_unique<sdl::TextureMapper>(texture_filepath.lexically_normal().string()));
-      } catch (const std::exception& exception) {
-        SDL_Log("Failed to load texture mapper: %s\n", exception.what());
-        texture_mappers.emplace_back(std::make_unique<mock::TextureMapper>());
-      }
-    }
+inline float GetScaleFactor() {
+  return SDL_GetDisplayContentScale(SDL_GetPrimaryDisplay());
+}
+
+SDL_Window* InitAndCreateWindow(
+  const char* title,
+  const int width,
+  const int height,
+  float& scale_factor,
+  const SDL_WindowFlags flags
+) {
+  if (!SDL_Init(SDL_INIT_VIDEO)){
+    throw App::Error("SDL_Init failed").WithMessage();
   }
-  return api_handle->LoadObject(geometry_transferer, texture_mappers);
+  scale_factor = GetScaleFactor();
+  SDL_Window* window = SDL_CreateWindow(
+    title,
+    static_cast<int>(static_cast<float>(width) * scale_factor),
+    static_cast<int>(static_cast<float>(height) * scale_factor),
+    flags
+  );
+  if (window == nullptr) {
+    SDL_Quit();
+    throw App::Error("Failed to create window").WithMessage();
+  }
+  return window;
 }
 
 } // namespace
 
 App::App()
-    : api_plugin_("libvk_api"),
-      object_parser_plugin_("libobj_parser") {}
+  : window_(InitAndCreateWindow(
+      kTitle.data(),
+      kWidth,
+      kHeight,
+      scale_factor_,
+      SDL_WINDOW_RESIZABLE |
+      SDL_WINDOW_HIGH_PIXEL_DENSITY |
+      sdl::Render3D::kWindowFlags
+  )),
+  render_(window_, scale_factor_),
+  object_(render_.LoadObject("obj/Madara Uchiha/obj/Madara_Uchiha.obj")) {}
 
-App::~App() {
-  object_parser_plugin_.DestroyObjectParser(object_parser_);
-  api_plugin_.Destroy(api_, window_);
-}
+App::~App() { SDL_Quit(); }
 
-void App::Init() {
-  api_ = api_plugin_.CreateApiAndWindow(
-    kTitle.data(),
-    1280,
-    720,
-    SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY,
-    window_
-  );
-  resource::scope_exit render_guard([this] {
-    api_plugin_.Destroy(api_, window_);
-  });
-
-  object_parser_ = object_parser_plugin_.CreateObjectParser();
-  resource::scope_exit object_parser_guard([this] {
-    object_parser_plugin_.DestroyObjectParser(object_parser_);
-  });
-
-  object_ = LoadObject(
-    "obj/Madara Uchiha/obj/Madara_Uchiha.obj",
-    api_,
-    object_parser_
-  );
-  resource::release_all(render_guard, object_parser_guard);
-}
-
-SDL_AppResult App::HandleEvent(const SDL_Event* event) const {
-  api_->GetGuiRenderer()->ProcessEvent(event);
+SDL_AppResult App::HandleEvent(const SDL_Event* event) {
+  render_.ProcessEvent(event);
   switch (event->type) {
     case SDL_EVENT_TERMINATING:
     case SDL_EVENT_QUIT:
       return SDL_APP_SUCCESS;
-    case SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED:
-      api_->OnResize(event->window.data1, event->window.data2);
-      break;
     default:
       break;
   }
@@ -89,8 +63,7 @@ SDL_AppResult App::HandleEvent(const SDL_Event* event) const {
 }
 
 SDL_AppResult App::Iterate() {
-  api_->RenderFrame();
-
+  render_.RenderFrame();
   static auto start_time = std::chrono::high_resolution_clock::now();
 
   const auto current_time = std::chrono::high_resolution_clock::now();
@@ -108,5 +81,3 @@ SDL_AppResult App::Iterate() {
 
   return SDL_APP_CONTINUE;
 }
-
-

@@ -5,8 +5,8 @@ set(VK_VERSION "1.3.275.0")
 set(VK_SDK_TAG "vulkan-sdk-${VK_VERSION}")
 
 configure_shaders(shaders shaders.in.cc shaders.cc)
-get_target_property(IMGUI_DIR gui GUI_IMGUI_DIR)
-make_plugin(vk_api
+add_library(vk_render STATIC)
+target_sources(vk_render PRIVATE
         descriptor.h
         descriptor.cc
         sampler.h
@@ -34,19 +34,16 @@ make_plugin(vk_api
         swapchain.cc
         error.h
         surface.h
-        surface.cc
         render.h
         render.cc
         queue.h
         queue.cc
         shaders.h
         shaders.cc
-        gui.h
-        gui.cc
-        ${IMGUI_DIR}/backends/imgui_impl_vulkan.cpp
-        api_plugin.cc
         api.h
         api.cc
+        window.h
+        texture_mapper.h
 )
 
 if (IOS)
@@ -65,18 +62,13 @@ if (IOS)
             execute_process(COMMAND ${CMAKE_COMMAND} -E tar xf "${MOLTENVK_TAR}"
                     WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/externals")
         endif()
+        set(MOLTENVK_INCLUDE_DIR "${MOLTENVK_DIR}/MoltenVK/include" PARENT_SCOPE)
         set(MOLTENVK_LIBRARY "${MOLTENVK_DIR}/MoltenVK/${MOLTENVK_PLATFORM}/libMoltenVK.a" PARENT_SCOPE)
     endfunction()
     download_moltenvk()
 
-    FetchContent_Declare(
-            Vulkan-Headers
-            GIT_REPOSITORY https://github.com/KhronosGroup/Vulkan-Headers.git
-            GIT_TAG ${VK_SDK_TAG}
-            GIT_SHALLOW    TRUE
-    )
-    FetchContent_MakeAvailable(Vulkan-Headers)
-    target_link_libraries(vk_api PUBLIC Vulkan::Headers ${MOLTENVK_LIBRARY} "-framework Metal	       \
+    target_include_directories(vk_render PUBLIC ${MOLTENVK_INCLUDE_DIR})
+    target_link_libraries(vk_render PUBLIC Vulkan::Headers ${MOLTENVK_LIBRARY} "-framework Metal	       \
                                                                              -framework IOSurface 	   \
                                                                              -framework CoreGraphics   \
                                                                              -framework IOKit          \
@@ -86,16 +78,12 @@ if (IOS)
                                                                              -framework CoreFoundation")
 else()
     if (APPLE)
-        target_compile_definitions(vk_api PUBLIC USE_PORTABILITY)
+        target_compile_definitions(vk_render PUBLIC USE_PORTABILITY)
     endif()
     if (NOT TARGET Vulkan::Vulkan)
         find_package(Vulkan REQUIRED)
     endif()
-    target_link_libraries(vk_api PUBLIC Vulkan::Vulkan)
-endif()
-
-if (NOT TARGET SDL3::SDL3)
-    find_package(SDL3 REQUIRED)
+    target_link_libraries(vk_render PUBLIC Vulkan::Vulkan)
 endif()
 
 if (NOT TARGET shaderc)
@@ -157,13 +145,8 @@ if (${CMAKE_BUILD_TYPE} STREQUAL "Debug" AND ANDROID)
     file(ARCHIVE_EXTRACT INPUT ${CMAKE_BINARY_DIR}/${VVL_NAME} DESTINATION ${MOBILE_LIBS_DIR})
 endif()
 
-target_include_directories(vk_api PUBLIC ${IMGUI_DIR})
-target_link_libraries(vk_api PUBLIC
-        shaderc
-        SDL3::SDL3
-        render
-)
+target_link_libraries(vk_render PUBLIC shaderc render)
 
 if (APPLE)
-    target_compile_definitions(vk_api PUBLIC VK_ENABLE_BETA_EXTENSIONS)
+    target_compile_definitions(vk_render PUBLIC VK_ENABLE_BETA_EXTENSIONS)
 endif()

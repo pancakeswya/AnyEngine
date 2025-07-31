@@ -14,13 +14,13 @@ struct ShaderInfo {
   GLenum type;
 };
 
-struct Shader : RUNTIME_HANDLE(GLuint, glDeleteShader) {
+struct Shader : Handle {
   DECLARE_DEFAULT_NO_COPY_CLASS(Shader);
 
   explicit Shader(const ShaderInfo& info);
 };
 
-struct ShaderProgram : RUNTIME_HANDLE(GLuint, glDeleteProgram) {
+struct ShaderProgram : Handle {
   DECLARE_DEFAULT_NO_COPY_CLASS(ShaderProgram);
 
   explicit ShaderProgram(const char* glsl_version, std::vector<ShaderInfo>&& infos);

@@ -3,21 +3,25 @@
 
 #include "render/api.h"
 #include "render/apis/gl/loader.h"
-#include "render/apis/gl/context.h"
 #include "render/apis/gl/object.h"
 #include "render/apis/gl/shader.h"
-#include "render/apis/gl/gui.h"
-
-#include <SDL3/SDL.h>
+#include "render/apis/gl/window.h"
+#include "render/apis/gl/texture_mapper.h"
 
 #include <vector>
 #include <memory>
 
 namespace gl {
 
-class Api final : public render::Api {
+class Api final : public render::Api<TextureMapper> {
 public:
-  explicit Api(SDL_Window* window, float scale_factor);
+#ifdef USE_OPENGL_ES3
+  static constexpr auto kGlSlVersion = "#version 300 es\n";
+#else
+  static constexpr auto kGlSlVersion = "#version 150\n";
+#endif
+
+  explicit Api(const Window& window);
   ~Api() override = default;
 
   void OnResize(int width, int height) override;
@@ -25,18 +29,12 @@ public:
   void RenderFrame() override;
   render::Object* LoadObject(
       render::GeometryTransferer& geometry_transferer,
-      std::vector<std::unique_ptr<render::TextureMapper>>& texture_mappers) override;
-
-  render::GuiRenderer* GetGuiRenderer() noexcept override {
-    return &gui_renderer_;
-  }
+      std::vector<std::unique_ptr<TextureMapper>>& texture_mappers) override;
 private:
-  Context context_;
   ShaderProgram program_;
   std::vector<Object> objects_;
 
-  SDL_Window* window_;
-  GuiRenderer gui_renderer_;
+  const Window& window_;
 };
 
 } // namespace gl

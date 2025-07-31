@@ -4,14 +4,10 @@
 #include "render/apis/vk/handle.h"
 
 #include <vulkan/vulkan.h>
-#include <SDL3/SDL.h>
 
 namespace vk {
 
-struct Surface : NonDispatchableHandle<VkSurfaceKHR, VkInstance, vkDestroySurfaceKHR> {
-  DECLARE_DEFAULT_NO_COPY_CLASS(Surface);
-  Surface(SDL_Window* window, VkInstance instance);
-};
+using Surface = NonDispatchableHandle<VkSurfaceKHR, VkInstance, vkDestroySurfaceKHR>;
 
 } // namespace vk
 
